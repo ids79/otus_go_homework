@@ -68,4 +68,3 @@ linters:
     - unused
     - wastedassign
     - whitespace
-    

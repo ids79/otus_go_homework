@@ -2,7 +2,6 @@ package hw02unpackstring
 
 import (
 	"errors"
-
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -25,8 +24,8 @@ func TestUnpack(t *testing.T) {
 		// my tasks for testing
 		{input: `id&s\4!\5@`, expected: `ids45`},
 		{input: `\72ids\4`, expected: `77ids4`},
+		{input: `\1`, expected: `1`},
 	}
-
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.input, func(t *testing.T) {

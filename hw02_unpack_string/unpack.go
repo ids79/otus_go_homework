@@ -38,9 +38,7 @@ func Unpack(str string) (string, error) {
 		return "", ErrInvalidString
 	}
 	if unicode.IsLetter(lastSumbol) || screening {
-		bilder.Grow(1)
 		bilder.WriteRune(lastSumbol)
 	}
-
 	return bilder.String(), nil
 }

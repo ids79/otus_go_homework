@@ -14,8 +14,10 @@ func Unpack(str string) (string, error) {
 	lastSumbol := ' '
 	screening := false
 	for _, r := range str {
-		if lastSumbol != '\\' && !screening && (lastSumbol == ' ' || unicode.IsDigit(lastSumbol)) && unicode.IsDigit(r) {
-			return "", ErrInvalidString
+		if lastSumbol == ' ' || unicode.IsDigit(lastSumbol) {
+			if !screening && unicode.IsDigit(r) {
+				return "", ErrInvalidString
+			}
 		}
 		if unicode.IsLetter(lastSumbol) || screening {
 			if unicode.IsDigit(r) {

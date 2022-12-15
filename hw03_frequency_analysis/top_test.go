@@ -74,13 +74,12 @@ var text2 = `Жил старик со своею старухой
 var text3 = `cat and dog, one and one man`
 
 func TestTop10(t *testing.T) {
-	TaskWithAsteriskIsCompleted = taskWithAsteriskIsCompleted
 	t.Run("no words in empty string", func(t *testing.T) {
-		require.Len(t, Top10(""), 0)
+		require.Len(t, Top10("", taskWithAsteriskIsCompleted), 0)
 	})
 	if taskWithAsteriskIsCompleted {
-		t.Run("no words in empty string", func(t *testing.T) {
-			require.Len(t, Top10(";-."), 0)
+		t.Run("no words in string with special symbols", func(t *testing.T) {
+			require.Len(t, Top10(";-.", taskWithAsteriskIsCompleted), 0)
 		})
 	}
 	t.Run("positive test", func(t *testing.T) {
@@ -97,7 +96,7 @@ func TestTop10(t *testing.T) {
 				"кристофер", // 4
 				"не",        // 4
 			}
-			require.Equal(t, expected, Top10(text))
+			require.Equal(t, expected, Top10(text, taskWithAsteriskIsCompleted))
 		} else {
 			expected := []string{
 				"он",        // 8
@@ -111,7 +110,7 @@ func TestTop10(t *testing.T) {
 				"не",        // 4
 				"то",        // 4
 			}
-			require.Equal(t, expected, Top10(text))
+			require.Equal(t, expected, Top10(text, taskWithAsteriskIsCompleted))
 		}
 	})
 	t.Run("positive test", func(t *testing.T) {
@@ -128,7 +127,7 @@ func TestTop10(t *testing.T) {
 				"раз",
 				"старик",
 			}
-			require.Equal(t, expected, Top10(text2))
+			require.Equal(t, expected, Top10(text2, taskWithAsteriskIsCompleted))
 		} else {
 			expected := []string{
 				"в",
@@ -142,7 +141,7 @@ func TestTop10(t *testing.T) {
 				"И",
 				"Он",
 			}
-			require.Equal(t, expected, Top10(text2))
+			require.Equal(t, expected, Top10(text2, taskWithAsteriskIsCompleted))
 		}
 	})
 	t.Run("positive test", func(t *testing.T) {
@@ -154,7 +153,7 @@ func TestTop10(t *testing.T) {
 				"dog",
 				"man",
 			}
-			require.Equal(t, expected, Top10(text3))
+			require.Equal(t, expected, Top10(text3, taskWithAsteriskIsCompleted))
 		} else {
 			expected := []string{
 				"and",
@@ -163,7 +162,7 @@ func TestTop10(t *testing.T) {
 				"dog,",
 				"man",
 			}
-			require.Equal(t, expected, Top10(text3))
+			require.Equal(t, expected, Top10(text3, taskWithAsteriskIsCompleted))
 		}
 	})
 }

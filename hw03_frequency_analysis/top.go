@@ -12,9 +12,7 @@ type TopWords struct {
 	number int
 }
 
-var TaskWithAsteriskIsCompleted = false
-
-var rC = regexp.MustCompile(`[,|.|!|?|"|:|;]`)
+var TemplateForReplacingText = regexp.MustCompile(`[,|.|!|?|"|:|;]`)
 
 func getFunc(top []TopWords) func(i, j int) bool {
 	return func(i, j int) bool {
@@ -25,20 +23,20 @@ func getFunc(top []TopWords) func(i, j int) bool {
 	}
 }
 
-func Top10(str string) []string {
-	if TaskWithAsteriskIsCompleted {
+func Top10(str string, extendedLevel bool) []string {
+	if extendedLevel {
 		str = strings.ToLower(str)
-		str = rC.ReplaceAllString(str, "")
+		str = TemplateForReplacingText.ReplaceAllString(str, "")
 	}
 	words := strings.Fields(str)
 	m := make(map[string]int)
 	for _, word := range words {
-		if TaskWithAsteriskIsCompleted && word == "-" {
+		if extendedLevel && word == "-" {
 			continue
 		}
 		m[word]++
 	}
-	top := make([]TopWords, 0)
+	top := make([]TopWords, 0, len(m))
 	for word, n := range m {
 		t := TopWords{word: word, number: n}
 		top = append(top, t)

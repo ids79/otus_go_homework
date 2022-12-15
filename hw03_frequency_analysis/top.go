@@ -51,5 +51,6 @@ func Top10(str string) []string {
 		}
 		top10[i] = top[i].word
 	}
+
 	return top10
 }

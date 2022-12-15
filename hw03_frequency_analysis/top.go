@@ -13,6 +13,7 @@ type TopWords struct {
 }
 
 var TaskWithAsteriskIsCompleted = false
+var rC = regexp.MustCompile(`[,|.|!|?|"|:|;]`)
 
 func getFunc(top []TopWords) func(i, j int) bool {
 	return func(i, j int) bool {
@@ -22,9 +23,6 @@ func getFunc(top []TopWords) func(i, j int) bool {
 		return top[i].number > top[j].number
 	}
 }
-
-var rC = regexp.MustCompile(`[,|.|!|?|"|:|;]`)
-var top []TopWords
 
 func Top10(str string) []string {
 	if TaskWithAsteriskIsCompleted {
@@ -39,13 +37,14 @@ func Top10(str string) []string {
 		}
 		m[word]++
 	}
+	top := make([]TopWords, 0)
 	for word, n := range m {
 		t := TopWords{word: word, number: n}
 		top = append(top, t)
 	}
 	sort.Slice(top, getFunc(top))
-	top10Len := int(math.Min(float64(10), float64(len(top))))
-	top10 := make([]string, top10Len)
+	top10len := int(math.Min(float64(10), float64(len(top))))
+	top10 := make([]string, top10len)
 	for i := 0; i < 10; i++ {
 		if len(top) <= i {
 			break

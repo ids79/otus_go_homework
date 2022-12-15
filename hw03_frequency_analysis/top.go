@@ -13,6 +13,7 @@ type TopWords struct {
 }
 
 var TaskWithAsteriskIsCompleted = false
+
 var rC = regexp.MustCompile(`[,|.|!|?|"|:|;]`)
 
 func getFunc(top []TopWords) func(i, j int) bool {

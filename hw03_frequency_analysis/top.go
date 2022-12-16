@@ -12,7 +12,7 @@ type TopWords struct {
 	number int
 }
 
-var TemplateForReplacingText = regexp.MustCompile(`[,|.|!|?|"|:|;]`)
+var templateForReplacingText = regexp.MustCompile(`[,|.|!|?|"|:|;]`)
 
 func getFunc(top []TopWords) func(i, j int) bool {
 	return func(i, j int) bool {
@@ -26,7 +26,7 @@ func getFunc(top []TopWords) func(i, j int) bool {
 func Top10(str string, extendedLevel bool) []string {
 	if extendedLevel {
 		str = strings.ToLower(str)
-		str = TemplateForReplacingText.ReplaceAllString(str, "")
+		str = templateForReplacingText.ReplaceAllString(str, "")
 	}
 	words := strings.Fields(str)
 	m := make(map[string]int)

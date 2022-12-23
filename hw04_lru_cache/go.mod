@@ -1,6 +1,6 @@
-module github.com/fixme_my_friend/hw04_lru_cache
+module github.com/ids79/otus_go_homework/hw04_lru_cache
 
-go 1.16
+go 1.19
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

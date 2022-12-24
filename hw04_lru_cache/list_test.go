@@ -8,14 +8,14 @@ import (
 
 func TestList(t *testing.T) {
 	t.Run("empty list", func(t *testing.T) {
-		l := NewList()
+		l := NewList[int]()
 
 		require.Equal(t, 0, l.Len())
 		require.Nil(t, l.Front())
 		require.Nil(t, l.Back())
 	})
 	t.Run("complex", func(t *testing.T) {
-		l := NewList()
+		l := NewList[int]()
 
 		l.PushFront(10) // [10]
 		l.PushBack(20)  // [10, 20]
@@ -44,12 +44,12 @@ func TestList(t *testing.T) {
 
 		elems := make([]int, 0, l.Len())
 		for i := l.Front(); i != nil; i = i.Next {
-			elems = append(elems, i.Value.(int))
+			elems = append(elems, i.Value)
 		}
 		require.Equal(t, []int{70, 60, 80, 40, 10, 30, 50}, elems)
 	})
 	t.Run("complex 2", func(t *testing.T) {
-		l := NewList()
+		l := NewList[int]()
 
 		l.PushBack(10) // [10]
 		require.NotNil(t, l.Front())

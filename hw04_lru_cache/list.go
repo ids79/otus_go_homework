@@ -1,66 +1,77 @@
 package hw04lrucache
 
-type List interface {
+type List[T ItemType] interface {
 	Len() int
-	Front() *ListItem
-	Back() *ListItem
-	PushFront(v interface{}) *ListItem
-	PushBack(v interface{}) *ListItem
-	Remove(i *ListItem)
-	MoveToFront(i *ListItem)
+	Front() *ListItem[T]
+	Back() *ListItem[T]
+	PushFront(T) *ListItem[T]
+	PushBack(T) *ListItem[T]
+	Remove(i *ListItem[T])
+	MoveToFront(i *ListItem[T])
 }
 
-type ListItem struct {
-	Value interface{}
-	Next  *ListItem
-	Prev  *ListItem
+type ItemType interface {
+	~int | string | ~float64
 }
 
-type list struct {
-	frontItem *ListItem
-	backItem  *ListItem
+type ListItem[T ItemType] struct {
+	Value T
+	key   Key
+	Next  *ListItem[T]
+	Prev  *ListItem[T]
+}
+
+type list[T ItemType] struct {
+	frontItem *ListItem[T]
+	backItem  *ListItem[T]
 	len       int
 }
 
-func (l *list) Len() int {
+func (l *list[T]) Len() int {
 	return l.len
 }
 
-func (l *list) Front() *ListItem {
+func (l *list[T]) Front() *ListItem[T] {
 	return l.frontItem
 }
 
-func (l *list) Back() *ListItem {
+func (l *list[T]) Back() *ListItem[T] {
 	return l.backItem
 }
 
-func (l *list) PushFront(v interface{}) *ListItem {
-	pItem := &ListItem{v, l.frontItem, nil}
+func (l *list[T]) PushFront(v T) *ListItem[T] {
+	lItem := &ListItem[T]{
+		Value: v,
+		Next:  l.frontItem,
+	}
 	if l.frontItem != nil {
-		l.frontItem.Prev = pItem
+		l.frontItem.Prev = lItem
 	}
-	l.frontItem = pItem
+	l.frontItem = lItem
 	if l.backItem == nil {
-		l.backItem = pItem
+		l.backItem = lItem
 	}
 	l.len++
-	return pItem
+	return lItem
 }
 
-func (l *list) PushBack(v interface{}) *ListItem {
-	pItem := &ListItem{v, nil, l.backItem}
+func (l *list[T]) PushBack(v T) *ListItem[T] {
+	lItem := &ListItem[T]{
+		Value: v,
+		Prev:  l.backItem,
+	}
 	if l.backItem != nil {
-		l.backItem.Next = pItem
+		l.backItem.Next = lItem
 	}
-	l.backItem = pItem
+	l.backItem = lItem
 	if l.frontItem == nil {
-		l.frontItem = pItem
+		l.frontItem = lItem
 	}
 	l.len++
-	return pItem
+	return lItem
 }
 
-func (l *list) Remove(i *ListItem) {
+func (l *list[T]) Remove(i *ListItem[T]) {
 	switch {
 	case l.backItem == i && l.frontItem == i:
 		l.backItem, l.frontItem = nil, nil
@@ -77,7 +88,7 @@ func (l *list) Remove(i *ListItem) {
 	l.len--
 }
 
-func (l *list) MoveToFront(i *ListItem) {
+func (l *list[T]) MoveToFront(i *ListItem[T]) {
 	switch {
 	case i == l.frontItem:
 		return
@@ -94,6 +105,6 @@ func (l *list) MoveToFront(i *ListItem) {
 	l.frontItem = i
 }
 
-func NewList() List {
-	return new(list)
+func NewList[T ItemType]() List[T] {
+	return new(list[T])
 }

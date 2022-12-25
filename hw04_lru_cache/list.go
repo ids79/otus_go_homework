@@ -11,12 +11,11 @@ type List[T ItemType] interface {
 }
 
 type ItemType interface {
-	~int | string | ~float64
+	any
 }
 
 type ListItem[T ItemType] struct {
 	Value T
-	key   Key
 	Next  *ListItem[T]
 	Prev  *ListItem[T]
 }

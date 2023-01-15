@@ -2,57 +2,54 @@ package hw05parallelexecution
 
 import (
 	"errors"
-	"sync/atomic"
+	"sync"
 )
-
-var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
 type Task func() error
 
-var chTask chan Task
+var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
-var chErr chan error
-
-var working int32
-
-func worcker(t Task) {
-	defer atomic.AddInt32(&working, -1)
-	err := t()
-	if err != nil {
-		chErr <- err
-		return
-	}
-	for {
-		if t, ok := <-chTask; ok {
-			err = t()
-			if err != nil {
-				chErr <- err
-				return
-			}
-		} else {
-			return
-		}
-	}
-}
+var ErrNoThreadsForExecute = errors.New("errors no threads for execute")
 
 func Run(tasks []Task, n, m int) (err error) {
+	wg := &sync.WaitGroup{}
+	if m < 0 {
+		m = len(tasks) + 1
+	}
+	chTask := make(chan Task, 1)
+	chErr := make(chan error, m)
 	defer func() {
-		for atomic.LoadInt32(&working) != 0 {
-			select {
-			case <-chErr:
+		wg.Wait()
+		close(chErr)
+		for {
+			if _, ok := <-chErr; ok {
 				m--
-			default:
+			} else {
+				break
 			}
 		}
 		if m <= 0 {
 			err = ErrErrorsLimitExceeded
 		}
 	}()
-	chTask = make(chan Task, 1)
-	chErr = make(chan error)
-	working = 0
-	if m < 0 {
-		m = len(tasks) + 1
+	if n <= 0 {
+		err = ErrNoThreadsForExecute
+		return
+	}
+	if n > len(tasks) {
+		n = len(tasks)
+	}
+	for i := 0; i < n; i++ {
+		go func() {
+			defer wg.Done()
+			for t := range chTask {
+				err := t()
+				if err != nil {
+					chErr <- err
+				}
+			}
+		}()
+		wg.Add(1)
 	}
 	for i := 0; i < len(tasks); {
 		select {
@@ -63,22 +60,12 @@ func Run(tasks []Task, n, m int) (err error) {
 				close(chTask)
 				return
 			}
-			if int(atomic.LoadInt32(&working)) < n {
-				go worcker(tasks[i])
-				atomic.AddInt32(&working, 1)
+			select {
+			case chTask <- tasks[i]:
 				i++
-			} else {
-				select {
-				case chTask <- tasks[i]:
-					i++
-				default:
-				}
+			default:
 			}
 		}
-	}
-	if len(chTask) == 1 {
-		go worcker(<-chTask)
-		atomic.AddInt32(&working, 1)
 	}
 	close(chTask)
 	return

@@ -90,4 +90,26 @@ func TestRun(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, runTasksCount, int32(tasksCount), "all tasks were started and finished")
 	})
+
+	t.Run("if n<=0, than all tasks are not executed", func(t *testing.T) {
+		tasksCount := 2
+		tasks := make([]Task, 0, tasksCount)
+
+		var runTasksCount int32
+
+		for i := 0; i < tasksCount; i++ {
+			err := fmt.Errorf("error from task %d", i)
+			tasks = append(tasks, func() error {
+				time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
+				atomic.AddInt32(&runTasksCount, 1)
+				return err
+			})
+		}
+
+		workersCount := -1
+		maxErrorsCount := 1
+		err := Run(tasks, workersCount, maxErrorsCount)
+
+		require.Truef(t, errors.Is(err, ErrNoThreadsForExecute), "actual err - %v", err)
+	})
 }

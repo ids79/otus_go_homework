@@ -16,25 +16,15 @@ func Run(tasks []Task, n, m int) (err error) {
 		err = ErrNoThreadsForExecute
 		return
 	}
-	wg := &sync.WaitGroup{}
 	if m < 0 {
 		m = len(tasks) + 1
 	}
 	chTask := make(chan Task)
 	chErr := make(chan error, n+1)
-	defer func() {
-		close(chTask)
-		wg.Wait()
-		close(chErr)
-		for range chErr {
-			if m--; m == 0 {
-				err = ErrErrorsLimitExceeded
-			}
-		}
-	}()
 	if n > len(tasks) {
 		n = len(tasks)
 	}
+	wg := &sync.WaitGroup{}
 	for i := 0; i < n; i++ {
 		wg.Add(1)
 		go func() {
@@ -51,9 +41,7 @@ func Run(tasks []Task, n, m int) (err error) {
 			exit := false
 			select {
 			case <-chErr:
-				if m--; m == 0 {
-					return
-				}
+				m--
 			default:
 				exit = true
 			}
@@ -61,7 +49,19 @@ func Run(tasks []Task, n, m int) (err error) {
 				break
 			}
 		}
+		if m <= 0 {
+			break
+		}
 		chTask <- task
+	}
+	close(chTask)
+	wg.Wait()
+	close(chErr)
+	for range chErr {
+		m--
+	}
+	if m <= 0 {
+		err = ErrErrorsLimitExceeded
 	}
 	return
 }

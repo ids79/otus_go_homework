@@ -12,61 +12,56 @@ var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 var ErrNoThreadsForExecute = errors.New("errors no threads for execute")
 
 func Run(tasks []Task, n, m int) (err error) {
-	wg := &sync.WaitGroup{}
-	if m < 0 {
-		m = len(tasks) + 1
-	}
-	chTask := make(chan Task, 1)
-	chErr := make(chan error, m)
-	defer func() {
-		wg.Wait()
-		close(chErr)
-		for {
-			if _, ok := <-chErr; ok {
-				m--
-			} else {
-				break
-			}
-		}
-		if m <= 0 {
-			err = ErrErrorsLimitExceeded
-		}
-	}()
 	if n <= 0 {
 		err = ErrNoThreadsForExecute
 		return
 	}
+	wg := &sync.WaitGroup{}
+	if m < 0 {
+		m = len(tasks) + 1
+	}
+	chTask := make(chan Task)
+	chErr := make(chan error, n+1)
+	defer func() {
+		close(chTask)
+		wg.Wait()
+		close(chErr)
+		for range chErr {
+			if m--; m == 0 {
+				err = ErrErrorsLimitExceeded
+			}
+		}
+	}()
 	if n > len(tasks) {
 		n = len(tasks)
 	}
 	for i := 0; i < n; i++ {
+		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for t := range chTask {
-				err := t()
-				if err != nil {
+				if err := t(); err != nil {
 					chErr <- err
 				}
 			}
 		}()
-		wg.Add(1)
 	}
-	for i := 0; i < len(tasks); {
-		select {
-		case <-chErr:
-			m--
-		default:
-			if m == 0 {
-				close(chTask)
-				return
-			}
+	for _, task := range tasks {
+		for {
+			exit := false
 			select {
-			case chTask <- tasks[i]:
-				i++
+			case <-chErr:
+				if m--; m == 0 {
+					return
+				}
 			default:
+				exit = true
+			}
+			if exit {
+				break
 			}
 		}
+		chTask <- task
 	}
-	close(chTask)
 	return
 }

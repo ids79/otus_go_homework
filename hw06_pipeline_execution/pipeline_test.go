@@ -2,6 +2,7 @@ package hw06pipelineexecution
 
 import (
 	"strconv"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -21,7 +22,13 @@ func TestPipeline(t *testing.T) {
 			go func() {
 				defer close(out)
 				for v := range in {
-					time.Sleep(sleepPerStage)
+					tick := time.NewTicker(time.Millisecond * 10)
+					for i := 0; i < 10; i++ {
+						<-tick.C
+						if atomic.LoadInt32(&Done) == 1 {
+							return
+						}
+					}
 					out <- f(v)
 				}
 			}()
@@ -89,5 +96,32 @@ func TestPipeline(t *testing.T) {
 
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
+	})
+
+	t.Run("one element is completed case", func(t *testing.T) {
+		in := make(Bi)
+		done := make(Bi)
+		data := []int{1, 2, 3, 4, 5}
+
+		// Abort after 450ms
+		abortDur := sleepPerStage*4 + fault
+		go func() {
+			<-time.After(abortDur)
+			close(done)
+		}()
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		result := make([]string, 0, 10)
+		for s := range ExecutePipeline(in, done, stages...) {
+			result = append(result, s.(string))
+		}
+
+		require.Equal(t, []string{"102"}, result)
 	})
 }

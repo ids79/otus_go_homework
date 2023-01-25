@@ -1,5 +1,10 @@
 package hw06pipelineexecution
 
+import (
+	"sync/atomic"
+	"time"
+)
+
 type (
 	In  = <-chan interface{}
 	Out = In
@@ -8,7 +13,34 @@ type (
 
 type Stage func(in In) (out Out)
 
+var Done int32
+
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
-	// Place your code here.
-	return nil
+	Done = 0
+	for _, stage := range stages {
+		in = stage(in)
+	}
+	if done != nil {
+		go func() {
+			tick := time.NewTicker(time.Millisecond * 10)
+			for {
+				<-tick.C
+				if isClose(done) {
+					atomic.AddInt32(&Done, 1)
+					break
+				}
+			}
+			tick.Stop()
+		}()
+	}
+	return in
+}
+
+func isClose(done In) bool {
+	select {
+	case <-done:
+		return true
+	default:
+		return false
+	}
 }

@@ -30,7 +30,6 @@ func ExecutePipeline(in In, done In, wg *sync.WaitGroup, stages ...Stage) Out {
 					atomic.AddInt32(&Done, 1)
 					break
 				}
-
 			}
 			tick.Stop()
 		}()

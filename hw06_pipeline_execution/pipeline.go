@@ -1,6 +1,7 @@
 package hw06pipelineexecution
 
 import (
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -15,7 +16,7 @@ type Stage func(in In) (out Out)
 
 var Done int32
 
-func ExecutePipeline(in In, done In, stages ...Stage) Out {
+func ExecutePipeline(in In, done In, wg *sync.WaitGroup, stages ...Stage) Out {
 	Done = 0
 	for _, stage := range stages {
 		in = stage(in)
@@ -29,6 +30,7 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 					atomic.AddInt32(&Done, 1)
 					break
 				}
+
 			}
 			tick.Stop()
 		}()

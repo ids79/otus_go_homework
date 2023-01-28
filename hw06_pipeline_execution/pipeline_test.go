@@ -24,13 +24,8 @@ var g = func(_ string, f func(v interface{}) interface{}) Stage {
 				tick := time.NewTicker(time.Millisecond * 10)
 				for i := 0; i < 10; i++ {
 					<-tick.C
-					select {
-					case <-v.(Val).done:
-						return
-					default:
-					}
 				}
-				out <- f(v.(Val).value.(int))
+				out <- f(v.(int))
 			}
 		}()
 		return out

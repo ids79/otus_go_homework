@@ -1,47 +1,35 @@
 package hw06pipelineexecution
 
-import (
-	"sync"
-	"sync/atomic"
-	"time"
-)
-
 type (
 	In  = <-chan interface{}
 	Out = In
 	Bi  = chan interface{}
+	Val struct {
+		value interface{}
+		done  In
+	}
 )
 
 type Stage func(in In) (out Out)
 
-var Done int32
-
-func ExecutePipeline(in In, done In, wg *sync.WaitGroup, stages ...Stage) Out {
-	Done = 0
+func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	for _, stage := range stages {
-		in = stage(in)
-	}
-	if done != nil {
-		go func() {
-			tick := time.NewTicker(time.Millisecond * 10)
-			for {
-				<-tick.C
-				if isClose(done) {
-					atomic.AddInt32(&Done, 1)
-					break
+		wr := make(chan interface{})
+		go func(in In) {
+			defer close(wr)
+			for v := range in {
+				d := Val{
+					value: v,
+					done:  done,
+				}
+				select {
+				case <-done:
+					return
+				case wr <- d:
 				}
 			}
-			tick.Stop()
-		}()
+		}(in)
+		in = stage(wr)
 	}
 	return in
-}
-
-func isClose(done In) bool {
-	select {
-	case <-done:
-		return true
-	default:
-		return false
-	}
 }

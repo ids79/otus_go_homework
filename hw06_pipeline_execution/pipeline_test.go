@@ -13,29 +13,33 @@ const (
 	fault         = sleepPerStage / 2
 )
 
-func TestPipeline(t *testing.T) {
-	// Stage generator
-	g := func(_ string, f func(v interface{}) interface{}) Stage {
-		return func(in In) Out {
-			out := make(Bi)
-			go func() {
-				defer close(out)
-				for v := range in {
-					time.Sleep(sleepPerStage)
-					out <- f(v)
-				}
+var g = func(_ string, f func(v interface{}) interface{}) Stage {
+	return func(in In) Out {
+		out := make(Bi)
+		go func() {
+			defer func() {
+				close(out)
 			}()
-			return out
-		}
+			for v := range in {
+				tick := time.NewTicker(time.Millisecond * 10)
+				for i := 0; i < 10; i++ {
+					<-tick.C
+				}
+				out <- f(v.(int))
+			}
+		}()
+		return out
 	}
+}
 
-	stages := []Stage{
-		g("Dummy", func(v interface{}) interface{} { return v }),
-		g("Multiplier (* 2)", func(v interface{}) interface{} { return v.(int) * 2 }),
-		g("Adder (+ 100)", func(v interface{}) interface{} { return v.(int) + 100 }),
-		g("Stringifier", func(v interface{}) interface{} { return strconv.Itoa(v.(int)) }),
-	}
+var stages = []Stage{
+	g("Dummy", func(v interface{}) interface{} { return v }),
+	g("Multiplier (* 2)", func(v interface{}) interface{} { return v.(int) * 2 }),
+	g("Adder (+ 100)", func(v interface{}) interface{} { return v.(int) + 100 }),
+	g("Stringifier", func(v interface{}) interface{} { return strconv.Itoa(v.(int)) }),
+}
 
+func TestPipeline(t *testing.T) {
 	t.Run("simple case", func(t *testing.T) {
 		in := make(Bi)
 		data := []int{1, 2, 3, 4, 5}
@@ -74,10 +78,14 @@ func TestPipeline(t *testing.T) {
 		}()
 
 		go func() {
+			defer close(in)
 			for _, v := range data {
-				in <- v
+				select {
+				case in <- v:
+				case <-done:
+					return
+				}
 			}
-			close(in)
 		}()
 
 		result := make([]string, 0, 10)
@@ -89,5 +97,35 @@ func TestPipeline(t *testing.T) {
 
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
+	})
+
+	t.Run("one element is completed case", func(t *testing.T) {
+		in := make(Bi)
+		done := make(Bi)
+		data := []int{1, 2, 3, 4, 5}
+
+		// Abort after 450ms
+		abortDur := sleepPerStage*4 + fault
+		go func() {
+			<-time.After(abortDur)
+			close(done)
+		}()
+
+		go func() {
+			defer close(in)
+			for _, v := range data {
+				select {
+				case in <- v:
+				case <-done:
+					return
+				}
+			}
+		}()
+
+		result := make([]string, 0, 10)
+		for s := range ExecutePipeline(in, done, stages...) {
+			result = append(result, s.(string))
+		}
+		require.Equal(t, []string{"102"}, result)
 	})
 }

@@ -3,7 +3,13 @@ module github.com/ids79/otus_go_homework/hw07_file_copying
 go 1.19
 
 require (
+	github.com/VividCortex/ewma v1.1.1 // indirect
 	github.com/cheggaaa/pb v1.0.29 // indirect
-	github.com/mattn/go-runewidth v0.0.4 // indirect
-	golang.org/x/sys v0.0.0-20191026070338-33540a1f6037 // indirect
+	github.com/cheggaaa/pb/v3 v3.1.0 // indirect
+	github.com/fatih/color v1.10.0 // indirect
+	github.com/mattn/go-colorable v0.1.8 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/mattn/go-runewidth v0.0.12 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
+	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
 )

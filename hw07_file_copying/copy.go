@@ -4,26 +4,25 @@ import (
 	"errors"
 	"io"
 	"os"
-	"time"
 
-	"github.com/cheggaaa/pb"
+	"github.com/cheggaaa/pb/v3"
 )
 
 var (
-	ErrUnsupportedFile       = errors.New("unsupported file")
-	ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
+	ErrUnsupportedFile          = errors.New("unsupported file")
+	ErrOffsetExceedsFileSize    = errors.New("offset exceeds file size")
+	ErrSameSourceAndDestination = errors.New("same source and destination")
 )
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
+	if fromPath == toPath {
+		return ErrSameSourceAndDestination
+	}
 	fSrc, err := os.Open(fromPath)
 	if err != nil {
 		return ErrUnsupportedFile
 	}
 	defer fSrc.Close()
-	fDst, err := os.Create(toPath)
-	if err != nil {
-		return ErrUnsupportedFile
-	}
 	info, err := fSrc.Stat()
 	if err != nil {
 		return ErrUnsupportedFile
@@ -35,25 +34,27 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	if size < offset {
 		return ErrOffsetExceedsFileSize
 	}
+	fDst, err := os.Create(toPath)
+	if err != nil {
+		return ErrUnsupportedFile
+	}
 	if offset > 0 {
-		fSrc.Seek(offset, 0)
-	}
-	count := 100
-	bar := pb.StartNew(count)
-	needToCopy := size
-	if limit > 0 {
-		needToCopy = limit
-	}
-	copied := int64(0)
-	for i := 1; i <= count; i++ {
-		part := needToCopy / int64(count)
-		if i == count {
-			part = needToCopy - copied
+		_, err := fSrc.Seek(offset, io.SeekStart)
+		if err != nil {
+			return ErrUnsupportedFile
 		}
-		copied += part
-		io.CopyN(fDst, fSrc, part)
-		bar.Increment()
-		time.Sleep(time.Millisecond * 1)
+	}
+	if limit == 0 {
+		limit = size
+	}
+	if offset+limit > size {
+		limit = size - offset
+	}
+	bar := pb.Full.Start64(limit)
+	barReader := bar.NewProxyReader(fSrc)
+	copied, err := io.CopyN(fDst, barReader, limit)
+	if err != nil || copied < limit {
+		return err
 	}
 	bar.Finish()
 	err = fDst.Close()

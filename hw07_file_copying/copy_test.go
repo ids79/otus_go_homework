@@ -57,6 +57,7 @@ var testsError = []struct {
 	offset int64
 	limit  int64
 	from   string
+	to     string
 	err    error
 }{
 	{
@@ -64,17 +65,26 @@ var testsError = []struct {
 		offset: 100000,
 		limit:  100,
 		from:   "testdata/input.txt",
+		to:     "testdata/out.txt",
 		err:    ErrOffsetExceedsFileSize,
 	},
 	{
 		name: "Unsupported file",
 		from: "/dev/urandom",
+		to:   "testdata/out.txt",
 		err:  ErrUnsupportedFile,
 	},
 	{
 		name: "Undefined file",
 		from: "testdata/non.txt",
+		to:   "testdata/out.txt",
 		err:  ErrUnsupportedFile,
+	},
+	{
+		name: "Same source and destination",
+		from: "testdata/input.txt",
+		to:   "testdata/input.txt",
+		err:  ErrSameSourceAndDestination,
 	},
 }
 
@@ -91,7 +101,7 @@ func TestCopy(t *testing.T) {
 	}
 	for _, test := range testsError {
 		t.Run(test.name, func(t *testing.T) {
-			result := Copy(test.from, to, test.offset, test.limit)
+			result := Copy(test.from, test.to, test.offset, test.limit)
 			require.ErrorIs(t, result, test.err)
 		})
 	}

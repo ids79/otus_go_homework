@@ -31,6 +31,9 @@ func TestRunCmd(t *testing.T) {
 		args[0] = "undefined"
 		returnCode = RunCmd(args, env)
 		require.Equal(t, 1, returnCode)
+		args[0] = "./cmd/cmd-error"
+		returnCode = RunCmd(args, env)
+		require.Equal(t, 2, returnCode)
 	})
 }
 

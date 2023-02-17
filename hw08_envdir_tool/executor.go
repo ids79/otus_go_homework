@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 )
@@ -23,6 +24,10 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 	comand.Stderr = os.Stderr
 	err := comand.Run()
 	if err != nil {
+		var errExitCode *exec.ExitError
+		if errors.As(err, &errExitCode) {
+			return errExitCode.ProcessState.ExitCode()
+		}
 		return 1
 	}
 

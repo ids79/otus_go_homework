@@ -1,0 +1,5 @@
+BAR: bar
+EMPTY: 
+FOO: foo
+HELLO: "hello"
+UNSET: is unsetted

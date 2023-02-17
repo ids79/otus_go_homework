@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ func ReadDir(dir string) (Environment, error) {
 		if strings.Contains(name, "=") {
 			return nil, errors.New("name contains =")
 		}
-		file, err := os.Open(dir + "/" + name)
+		file, err := os.Open(filepath.Join(dir, name))
 		if err != nil {
 			return nil, err
 		}

@@ -21,11 +21,7 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 	comand.Stdin = os.Stdin
 	comand.Stdout = os.Stdout
 	comand.Stderr = os.Stderr
-	err := comand.Start()
-	if err != nil {
-		return 1
-	}
-	err = comand.Wait()
+	err := comand.Run()
 	if err != nil {
 		return 1
 	}

@@ -14,7 +14,7 @@ func TestReadDir(t *testing.T) {
 		require.False(t, result["BAR"].NeedRemove)
 		require.Equal(t, result["EMPTY"].Value, "")
 		require.False(t, result["EMPTY"].NeedRemove)
-		require.Equal(t, result["FOO"].Value, "foo")
+		require.Equal(t, result["FOO"].Value, "   foo\nwith new line")
 		require.False(t, result["FOO"].NeedRemove)
 		require.Equal(t, result["HELLO"].Value, `"hello"`)
 		require.False(t, result["HELLO"].NeedRemove)

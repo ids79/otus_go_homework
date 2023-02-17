@@ -12,12 +12,12 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 	}
 	comand := exec.Command(cmd[0], cmd[1:]...)
 	for key, value := range env {
-		if value.NeedRemove {
-			os.Unsetenv(key)
-		} else {
-			comand.Env = append(comand.Env, key+"="+value.Value)
+		os.Unsetenv(key)
+		if !value.NeedRemove {
+			os.Setenv(key, value.Value)
 		}
 	}
+	comand.Env = os.Environ()
 	comand.Stdin = os.Stdin
 	comand.Stdout = os.Stdout
 	comand.Stderr = os.Stderr

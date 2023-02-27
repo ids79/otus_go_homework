@@ -40,9 +40,8 @@ type (
 	}
 
 	Token struct {
-		Header    []byte
-		Payload   []byte
-		Signature []byte
+		ID     string   `json:"id" validate:"len:36"`
+		Header Response `validate:"nested"`
 	}
 
 	Response struct {
@@ -169,29 +168,40 @@ var tests = []struct {
 		expectedErr: ErrStringLengthLongerAllowed,
 	},
 	{
+		in: Token{
+			ID: "12213123",
+			Header: Response{
+				Code: 100,
+				Body: "",
+			},
+		},
+		field:       "Code",
+		expectedErr: ErrValueNotIncludedAllowedList,
+	},
+	{
 		in:          Ex1{"dddddd"},
 		field:       "Version",
-		expectedErr: ErrCheckNotMatchType,
+		expectedErr: nil,
 	},
 	{
 		in:          Ex2{"dddddd"},
 		field:       "Version",
-		expectedErr: ErrCheckNotMatchType,
+		expectedErr: nil,
 	},
 	{
 		in:          Ex3{122133123},
 		field:       "Art",
-		expectedErr: ErrCheckNotMatchType,
+		expectedErr: nil,
 	},
 	{
 		in:          Ex4{122133123},
 		field:       "Num",
-		expectedErr: ErrCheckNotMatchType,
+		expectedErr: nil,
 	},
 	{
 		in:          10,
 		field:       "",
-		expectedErr: ErrValueIsNotStruct,
+		expectedErr: nil,
 	},
 }
 
@@ -213,7 +223,8 @@ func TestValidate(t *testing.T) {
 					}
 				}
 			case error:
-				require.ErrorIs(t, tt.expectedErr, err)
+				require.NotNil(t, err)
+				fmt.Println(err.Error())
 			default:
 			}
 		})

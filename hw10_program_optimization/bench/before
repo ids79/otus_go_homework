@@ -1,0 +1,7 @@
+goos: linux
+goarch: amd64
+pkg: github.com/ids79/otus_go_homework/hw10_program_optimization
+cpu: 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+BenchmarkBefore-8            136           7967669 ns/op         2381829 B/op      23135 allocs/op
+PASS
+ok      github.com/ids79/otus_go_homework/hw10_program_optimization     12.215s

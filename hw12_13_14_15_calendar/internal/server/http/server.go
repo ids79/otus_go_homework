@@ -2,8 +2,6 @@ package internalhttp
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -50,11 +48,10 @@ func (s *Server) Stop(ctx context.Context) error {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-		fmt.Println("hello-world")
-		s.logg.Info("hello-world")
-		s.logg.Info(ip, time.Now(), r.Method, http.StatusOK)
+		s.logg.Info(ip, time.Now(), " ", r.Method, " ", http.StatusOK)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode("hello-world")
+		//resp, err := json.NewEncoder(w).Encode("hello-otus")
+		w.Write([]byte("hello-otus\n"))
 	}
 }

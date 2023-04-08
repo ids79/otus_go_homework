@@ -1,5 +1,11 @@
 [logger]
 level = "INFO"
+log_encoding = "console"
 
-# TODO
-# ...
+[database]
+connect_str = "postgres://otus:otus@pg:5432/calendar"
+storage = "sql"
+
+[http-server]
+address = ":8080"
+

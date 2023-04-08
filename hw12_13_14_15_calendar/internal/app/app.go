@@ -2,25 +2,104 @@ package app
 
 import (
 	"context"
+	"errors"
+	"time"
+
+	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/config"
+	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/logger"
+	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage"
+	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types"
+	uuid "github.com/satori/go.uuid"
 )
 
-type App struct { // TODO
+type App struct {
+	logg    logger.Logg
+	storage storage.Storage
+	conf    config.Config
 }
 
-type Logger interface { // TODO
+type Application interface {
+	CreateEvent(ctx context.Context, ev Event) uuid.UUID
+	UpgateEvent(ctx context.Context, u uuid.UUID, ev Event) error
+	DeleteEvent(ctx context.Context, u uuid.UUID) error
+	GetListOnDay(ctx context.Context, time time.Time) []Event
+	GetListOnWeek(ctx context.Context, time time.Time) []Event
+	GetListOnMonth(ctx context.Context, time time.Time) []Event
 }
 
-type Storage interface { // TODO
+type Event struct {
+	ID          uuid.UUID
+	Title       string
+	DateTime    time.Time
+	Duration    time.Duration
+	TimeBefore  time.Duration
+	Description string
+	UserID      int
 }
 
-func New(logger Logger, storage Storage) *App {
-	return &App{}
+func New(logger logger.Logg, storage storage.Storage, config config.Config) Application {
+	return &App{
+		logg:    logger,
+		storage: storage,
+		conf:    config,
+	}
 }
 
-func (a *App) CreateEvent(ctx context.Context, id, title string) error {
-	// TODO
-	return nil
-	// return a.storage.CreateEvent(storage.Event{ID: id, Title: title})
+func (a *App) CreateEvent(ctx context.Context, ev Event) uuid.UUID {
+	u, err := a.storage.Create(types.Event{
+		DateTime:    time.Now(),
+		Title:       ev.Title,
+		Duration:    ev.Duration,
+		Description: ev.Description,
+		TimeBefore:  ev.TimeBefore,
+		UserID:      ev.UserID,
+	})
+	if errors.Is(types.ErrDeteIsOccupied, err) {
+		a.logg.Info("error when adding an event", err)
+		return uuid.Nil
+	}
+	return u
 }
 
-// TODO
+func (a *App) UpgateEvent(ctx context.Context, u uuid.UUID, ev Event) error {
+	err := a.storage.Update(u, types.Event{Duration: ev.Duration, Description: ev.Description, TimeBefore: ev.TimeBefore})
+	if err != nil {
+		a.logg.Error("error with update event", u, err)
+	}
+	return err
+}
+
+func (a *App) DeleteEvent(ctx context.Context, u uuid.UUID) error {
+	err := a.storage.Delete(u)
+	if err != nil {
+		a.logg.Error("error with delete event", u, err)
+	}
+	return err
+}
+
+func eventsFormBaseToApp(eventsBase []types.Event) []Event {
+	events := make([]Event, len(eventsBase))
+	for i, ev := range eventsBase {
+		events[i] = Event{
+			ID:          ev.ID,
+			Title:       ev.Title,
+			DateTime:    ev.DateTime,
+			Duration:    ev.Duration,
+			Description: ev.Description,
+			UserID:      ev.UserID,
+		}
+	}
+	return events
+}
+
+func (a *App) GetListOnDay(ctx context.Context, time time.Time) []Event {
+	return eventsFormBaseToApp(a.storage.ListOnDay(time))
+}
+
+func (a *App) GetListOnWeek(ctx context.Context, time time.Time) []Event {
+	return eventsFormBaseToApp(a.storage.ListOnWeek(time))
+}
+
+func (a *App) GetListOnMonth(ctx context.Context, time time.Time) []Event {
+	return eventsFormBaseToApp(a.storage.ListOnMonth(time))
+}

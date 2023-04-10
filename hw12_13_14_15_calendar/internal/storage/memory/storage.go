@@ -9,7 +9,7 @@ import (
 )
 
 type Storage struct {
-	sync.RWMutex
+	sm       sync.RWMutex
 	messages []types.Event
 	mesID    map[uuid.UUID]*types.Event
 }
@@ -24,8 +24,8 @@ func New() *Storage {
 }
 
 func (st *Storage) Create(ev types.Event) (uuid.UUID, error) {
-	st.Lock()
-	defer st.Unlock()
+	st.sm.Lock()
+	defer st.sm.Unlock()
 	ev.Year, ev.Month, ev.Day = ev.DateTime.Date()
 	for _, e := range st.messages {
 		if e.Year == ev.Year && e.Month == ev.Month && e.Day == ev.Day {
@@ -47,8 +47,8 @@ func (st *Storage) GetEvent(u uuid.UUID) (*types.Event, error) {
 }
 
 func (st *Storage) Update(u uuid.UUID, ev types.Event) error {
-	st.Lock()
-	defer st.Unlock()
+	st.sm.Lock()
+	defer st.sm.Unlock()
 	if _, ok := st.mesID[u]; !ok {
 		return types.ErrNotExistUUID
 	}
@@ -59,8 +59,8 @@ func (st *Storage) Update(u uuid.UUID, ev types.Event) error {
 }
 
 func (st *Storage) Delete(u uuid.UUID) error {
-	st.Lock()
-	defer st.Unlock()
+	st.sm.Lock()
+	defer st.sm.Unlock()
 	if _, ok := st.mesID[u]; !ok {
 		return types.ErrNotExistUUID
 	}

@@ -68,7 +68,6 @@ func (st *Storage) Create(ev types.Event) (uuid.UUID, error) {
 	_, err := st.conn.ExecContext(st.ctx, query,
 		u.String(), ev.Title, ev.Description, ev.DateTime, y, int(m), w, d, int(ev.Duration), ev.UserID, int(ev.TimeBefore))
 	if err != nil {
-		st.logg.Error("error when creating an event", err)
 		return uuid.Nil, err
 	}
 	return u, nil
@@ -79,7 +78,6 @@ func (st *Storage) Update(u uuid.UUID, ev types.Event) error {
 	_, err := st.conn.ExecContext(st.ctx, query,
 		ev.Description, int(ev.Duration), int(ev.TimeBefore), u.String())
 	if err != nil {
-		st.logg.Error("error when updating an event", err)
 		return err
 	}
 	return nil
@@ -89,7 +87,6 @@ func (st *Storage) Delete(u uuid.UUID) error {
 	query := `delete from events where id = $4`
 	_, err := st.conn.ExecContext(st.ctx, query, u)
 	if err != nil {
-		st.logg.Error("error when deleting an event", err)
 		return err
 	}
 	return nil

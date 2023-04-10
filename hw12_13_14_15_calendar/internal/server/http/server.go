@@ -2,6 +2,7 @@ package internalhttp
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"net/http"
 	"time"
@@ -51,7 +52,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.logg.Info(ip, time.Now(), " ", r.Method, " ", http.StatusOK)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		//resp, err := json.NewEncoder(w).Encode("hello-otus")
-		w.Write([]byte("hello-otus\n"))
+		json.NewEncoder(w).Encode("hello-otus")
 	}
 }

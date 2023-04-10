@@ -8,10 +8,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/app"
+	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/config"
+	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/server/http"
+	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var configFile string
@@ -28,17 +30,15 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
-
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
-
-	server := internalhttp.NewServer(logg, calendar)
-
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
+
+	config := config.NewConfig(configFile)
+	logg := logger.New(config.Logger)
+	storage := storage.New(ctx, logg, config)
+	calendar := app.New(logg, storage, config)
+	server := internalhttp.NewServer(logg, calendar, config)
 
 	go func() {
 		<-ctx.Done()

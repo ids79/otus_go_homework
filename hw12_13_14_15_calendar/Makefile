@@ -26,7 +26,7 @@ test:
 	go test -race ./internal/... ./pkg/...
 
 install-lint-deps:
-	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.49.1
+	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.50.1
 
 install-goose:
 	(which goose > /dev/null) || go install github.com/pressly/goose/v3/cmd/goose@latest

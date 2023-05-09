@@ -3,7 +3,6 @@ package internalhttp
 import (
 	"context"
 	"encoding/json"
-	"net"
 	"net/http"
 	"time"
 
@@ -30,13 +29,14 @@ func NewServer(logger logger.Logg, app app.Application, config config.Config) *S
 func (s *Server) Start(ctx context.Context) error {
 	server := &http.Server{
 		Addr:         s.conf.HTTPServer.Address,
-		Handler:      s,
+		Handler:      s.loggingMiddleware(),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 	s.srv = server
 	server.ListenAndServe()
 	<-ctx.Done()
+	server.Close()
 	return nil
 }
 
@@ -48,8 +48,6 @@ func (s *Server) Stop(ctx context.Context) error {
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
-		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-		s.logg.Info(ip, time.Now(), " ", r.Method, " ", http.StatusOK)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode("hello-otus")

@@ -14,27 +14,25 @@ import (
 )
 
 type Storage struct {
-	ctx     context.Context
 	connStr string
 	logg    logger.Logg
 	conn    *sqlx.DB
 }
 
-func New(ctx context.Context, logger logger.Logg, config config.Config) *Storage {
+func New(logger logger.Logg, config config.Config) *Storage {
 	return &Storage{
-		ctx:     ctx,
 		connStr: config.Database.ConnectString,
 		logg:    logger,
 	}
 }
 
-func (st *Storage) Connect() (err error) {
-	st.conn, err = sqlx.ConnectContext(st.ctx, "pgx", st.connStr)
+func (st *Storage) Connect(ctx context.Context) (err error) {
+	st.conn, err = sqlx.ConnectContext(ctx, "pgx", st.connStr)
 	if err != nil {
 		st.logg.Error("cannot connect to base psql: ", err)
 		return err
 	}
-	return st.conn.PingContext(st.ctx)
+	return st.conn.PingContext(ctx)
 }
 
 //go:embed migrations/*.sql
@@ -58,14 +56,14 @@ func (st *Storage) Close() error {
 	return st.conn.Close()
 }
 
-func (st *Storage) Create(ev types.Event) (uuid.UUID, error) {
+func (st *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error) {
 	u := uuid.NewV4()
 	y, m, d := ev.DateTime.Date()
 	_, w := ev.DateTime.ISOWeek()
 	query := `insert into events
-	(id, title, description, date_time, year, month, week, day, duration, iser_id, time_before) 
+	(id, title, description, date_time, year, month, week, day, duration, user_id, time_before) 
 	values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
-	_, err := st.conn.ExecContext(st.ctx, query,
+	_, err := st.conn.ExecContext(ctx, query,
 		u.String(), ev.Title, ev.Description, ev.DateTime, y, int(m), w, d, int(ev.Duration), ev.UserID, int(ev.TimeBefore))
 	if err != nil {
 		return uuid.Nil, err
@@ -73,9 +71,9 @@ func (st *Storage) Create(ev types.Event) (uuid.UUID, error) {
 	return u, nil
 }
 
-func (st *Storage) Update(u uuid.UUID, ev types.Event) error {
+func (st *Storage) Update(ctx context.Context, u uuid.UUID, ev types.Event) error {
 	query := `update events set description = $1, duration = $2, time_before = $3 where id = $4`
-	_, err := st.conn.ExecContext(st.ctx, query,
+	_, err := st.conn.ExecContext(ctx, query,
 		ev.Description, int(ev.Duration), int(ev.TimeBefore), u.String())
 	if err != nil {
 		return err
@@ -83,9 +81,9 @@ func (st *Storage) Update(u uuid.UUID, ev types.Event) error {
 	return nil
 }
 
-func (st *Storage) Delete(u uuid.UUID) error {
+func (st *Storage) Delete(ctx context.Context, u uuid.UUID) error {
 	query := `delete from events where id = $4`
-	_, err := st.conn.ExecContext(st.ctx, query, u)
+	_, err := st.conn.ExecContext(ctx, query, u)
 	if err != nil {
 		return err
 	}
@@ -106,10 +104,10 @@ func getRows(logg logger.Logg, rows *sqlx.Rows) []types.Event {
 	return list
 }
 
-func (st *Storage) ListOnDay(time time.Time) []types.Event {
+func (st *Storage) ListOnDay(ctx context.Context, time time.Time) []types.Event {
 	y, m, d := time.Date()
 	sql := "select * from events where day = :day and month = :month and year = :year"
-	rows, err := st.conn.NamedQueryContext(st.ctx, sql, map[string]interface{}{
+	rows, err := st.conn.NamedQueryContext(ctx, sql, map[string]interface{}{
 		"day":   d,
 		"month": m,
 		"year":  y,
@@ -121,10 +119,10 @@ func (st *Storage) ListOnDay(time time.Time) []types.Event {
 	return getRows(st.logg, rows)
 }
 
-func (st *Storage) ListOnWeek(time time.Time) []types.Event {
+func (st *Storage) ListOnWeek(ctx context.Context, time time.Time) []types.Event {
 	y, w := time.ISOWeek()
 	sql := "select * from events where week = :week and year = :year"
-	rows, err := st.conn.NamedQueryContext(st.ctx, sql, map[string]interface{}{
+	rows, err := st.conn.NamedQueryContext(ctx, sql, map[string]interface{}{
 		"week": w,
 		"year": y,
 	})
@@ -135,10 +133,10 @@ func (st *Storage) ListOnWeek(time time.Time) []types.Event {
 	return getRows(st.logg, rows)
 }
 
-func (st *Storage) ListOnMonth(time time.Time) []types.Event {
+func (st *Storage) ListOnMonth(ctx context.Context, time time.Time) []types.Event {
 	y, m, _ := time.Date()
 	sql := "select * from events where month = :month and year = :year"
-	rows, err := st.conn.NamedQueryContext(st.ctx, sql, map[string]interface{}{
+	rows, err := st.conn.NamedQueryContext(ctx, sql, map[string]interface{}{
 		"month": m,
 		"year":  y,
 	})

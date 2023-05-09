@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -23,7 +24,7 @@ func New() *Storage {
 	}
 }
 
-func (st *Storage) Create(ev types.Event) (uuid.UUID, error) {
+func (st *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error) {
 	st.sm.Lock()
 	defer st.sm.Unlock()
 	ev.Year, ev.Month, ev.Day = ev.DateTime.Date()
@@ -40,13 +41,15 @@ func (st *Storage) Create(ev types.Event) (uuid.UUID, error) {
 }
 
 func (st *Storage) GetEvent(u uuid.UUID) (*types.Event, error) {
+	st.sm.Lock()
+	defer st.sm.Unlock()
 	if ev, ok := st.mesID[u]; ok {
 		return ev, nil
 	}
 	return &types.Event{}, types.ErrNotExistUUID
 }
 
-func (st *Storage) Update(u uuid.UUID, ev types.Event) error {
+func (st *Storage) Update(ctx context.Context, u uuid.UUID, ev types.Event) error {
 	st.sm.Lock()
 	defer st.sm.Unlock()
 	if _, ok := st.mesID[u]; !ok {
@@ -58,7 +61,7 @@ func (st *Storage) Update(u uuid.UUID, ev types.Event) error {
 	return nil
 }
 
-func (st *Storage) Delete(u uuid.UUID) error {
+func (st *Storage) Delete(ctx context.Context, u uuid.UUID) error {
 	st.sm.Lock()
 	defer st.sm.Unlock()
 	if _, ok := st.mesID[u]; !ok {
@@ -74,7 +77,9 @@ func (st *Storage) Delete(u uuid.UUID) error {
 	return nil
 }
 
-func (st *Storage) ListOnDay(time time.Time) []types.Event {
+func (st *Storage) ListOnDay(ctx context.Context, time time.Time) []types.Event {
+	st.sm.Lock()
+	defer st.sm.Unlock()
 	list := make([]types.Event, 0)
 	y, m, d := time.Date()
 	for _, ev := range st.messages {
@@ -85,7 +90,9 @@ func (st *Storage) ListOnDay(time time.Time) []types.Event {
 	return list
 }
 
-func (st *Storage) ListOnWeek(time time.Time) []types.Event {
+func (st *Storage) ListOnWeek(ctx context.Context, time time.Time) []types.Event {
+	st.sm.Lock()
+	defer st.sm.Unlock()
 	list := make([]types.Event, 0)
 	y, w := time.ISOWeek()
 	for _, ev := range st.messages {
@@ -96,7 +103,9 @@ func (st *Storage) ListOnWeek(time time.Time) []types.Event {
 	return list
 }
 
-func (st *Storage) ListOnMonth(time time.Time) []types.Event {
+func (st *Storage) ListOnMonth(ctx context.Context, time time.Time) []types.Event {
+	st.sm.Lock()
+	defer st.sm.Unlock()
 	list := make([]types.Event, 0)
 	y, m, _ := time.Date()
 	for _, ev := range st.messages {

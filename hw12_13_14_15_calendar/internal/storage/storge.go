@@ -13,12 +13,12 @@ import (
 )
 
 type Storage interface {
-	Create(ev types.Event) (uuid.UUID, error)
-	Update(u uuid.UUID, ev types.Event) error
-	Delete(u uuid.UUID) error
-	ListOnDay(time time.Time) []types.Event
-	ListOnWeek(time time.Time) []types.Event
-	ListOnMonth(time time.Time) []types.Event
+	Create(ctx context.Context, ev types.Event) (uuid.UUID, error)
+	Update(ctx context.Context, u uuid.UUID, ev types.Event) error
+	Delete(ctx context.Context, u uuid.UUID) error
+	ListOnDay(ctx context.Context, time time.Time) []types.Event
+	ListOnWeek(ctx context.Context, time time.Time) []types.Event
+	ListOnMonth(ctx context.Context, time time.Time) []types.Event
 }
 
 func New(ctx context.Context, logg logger.Logg, config config.Config) Storage {
@@ -26,8 +26,8 @@ func New(ctx context.Context, logg logger.Logg, config config.Config) Storage {
 	case "memory":
 		return memorystorage.New()
 	case "sql":
-		stor := sqlstorage.New(ctx, logg, config)
-		err := stor.Connect()
+		stor := sqlstorage.New(logg, config)
+		err := stor.Connect(ctx)
 		if err != nil {
 			return nil
 		}

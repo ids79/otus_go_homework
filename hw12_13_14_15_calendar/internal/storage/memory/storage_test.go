@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -10,10 +11,11 @@ import (
 )
 
 func TestStorage(t *testing.T) {
+	ctx := context.Background()
 	t.Run("base test", func(t *testing.T) {
 		storage := New()
 
-		u, err := storage.Create(types.Event{
+		u, err := storage.Create(ctx, types.Event{
 			DateTime:    time.Now(),
 			Title:       "Event",
 			Duration:    time.Hour,
@@ -31,7 +33,7 @@ func TestStorage(t *testing.T) {
 		require.Equal(t, time.Hour*6, ev.TimeBefore)
 		require.Equal(t, 1, ev.UserID)
 
-		_, err = storage.Create(types.Event{
+		_, err = storage.Create(ctx, types.Event{
 			DateTime:    time.Now(),
 			Title:       "Event",
 			Duration:    time.Hour,
@@ -41,7 +43,7 @@ func TestStorage(t *testing.T) {
 		})
 		require.ErrorIs(t, types.ErrDeteIsOccupied, err)
 
-		err = storage.Update(u, types.Event{
+		err = storage.Update(ctx, u, types.Event{
 			Duration:    time.Hour * 2,
 			Description: "Change event ...",
 			TimeBefore:  time.Hour * 12,
@@ -51,18 +53,18 @@ func TestStorage(t *testing.T) {
 		require.Equal(t, time.Hour*2, ev.Duration)
 		require.Equal(t, time.Hour*12, ev.TimeBefore)
 
-		err = storage.Update(uuid.NewV4(), types.Event{})
+		err = storage.Update(ctx, uuid.NewV4(), types.Event{})
 		require.ErrorIs(t, types.ErrNotExistUUID, err)
 
-		events := storage.ListOnDay(time.Now())
+		events := storage.ListOnDay(ctx, time.Now())
 		require.Equal(t, 1, len(events))
 
-		err = storage.Delete(u)
+		err = storage.Delete(ctx, u)
 		require.NoError(t, err)
 		_, err = storage.GetEvent(u)
 		require.ErrorIs(t, types.ErrNotExistUUID, err)
 
-		err = storage.Delete(u)
+		err = storage.Delete(ctx, u)
 		require.ErrorIs(t, types.ErrNotExistUUID, err)
 	})
 }

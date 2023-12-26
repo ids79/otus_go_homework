@@ -46,7 +46,7 @@ func New(logger logger.Logg, storage storage.Storage, config config.Config) Appl
 }
 
 func (a *App) CreateEvent(ctx context.Context, ev Event) uuid.UUID {
-	u, err := a.storage.Create(types.Event{
+	u, err := a.storage.Create(ctx, types.Event{
 		DateTime:    time.Now(),
 		Title:       ev.Title,
 		Duration:    ev.Duration,
@@ -62,7 +62,11 @@ func (a *App) CreateEvent(ctx context.Context, ev Event) uuid.UUID {
 }
 
 func (a *App) UpgateEvent(ctx context.Context, u uuid.UUID, ev Event) error {
-	err := a.storage.Update(u, types.Event{Duration: ev.Duration, Description: ev.Description, TimeBefore: ev.TimeBefore})
+	err := a.storage.Update(ctx, u, types.Event{
+		Duration:    ev.Duration,
+		Description: ev.Description,
+		TimeBefore:  ev.TimeBefore,
+	})
 	if err != nil {
 		a.logg.Error("error with update event", u, err)
 	}
@@ -70,7 +74,7 @@ func (a *App) UpgateEvent(ctx context.Context, u uuid.UUID, ev Event) error {
 }
 
 func (a *App) DeleteEvent(ctx context.Context, u uuid.UUID) error {
-	err := a.storage.Delete(u)
+	err := a.storage.Delete(ctx, u)
 	if err != nil {
 		a.logg.Error("error with delete event", u, err)
 	}
@@ -93,13 +97,13 @@ func eventsFormBaseToApp(eventsBase []types.Event) []Event {
 }
 
 func (a *App) GetListOnDay(ctx context.Context, time time.Time) []Event {
-	return eventsFormBaseToApp(a.storage.ListOnDay(time))
+	return eventsFormBaseToApp(a.storage.ListOnDay(ctx, time))
 }
 
 func (a *App) GetListOnWeek(ctx context.Context, time time.Time) []Event {
-	return eventsFormBaseToApp(a.storage.ListOnWeek(time))
+	return eventsFormBaseToApp(a.storage.ListOnWeek(ctx, time))
 }
 
 func (a *App) GetListOnMonth(ctx context.Context, time time.Time) []Event {
-	return eventsFormBaseToApp(a.storage.ListOnMonth(time))
+	return eventsFormBaseToApp(a.storage.ListOnMonth(ctx, time))
 }

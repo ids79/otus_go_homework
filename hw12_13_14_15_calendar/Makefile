@@ -41,9 +41,7 @@ install-lint-deps:
 install-goose:
 	(which goose > /dev/null) || go install github.com/pressly/goose/v3/cmd/goose@latest
 
-lint: 
-    install-lint-deps
-	golangci-lint --version
+lint: install-lint-deps
 	golangci-lint run ./...
 
 .PHONY: build run build-img run-img version test lint

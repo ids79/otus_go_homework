@@ -4,6 +4,16 @@ DOCKER_IMG="calendar:develop"
 GIT_HASH := $(shell git log --format="%h" -n 1)
 LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
 
+generate:
+	rm -rf internal/pb
+	mkdir -p internal/pb
+	
+	protoc \
+	    --proto_path=api/ \
+	    --go_out=internal/pb \
+	    --go-grpc_out=internal/pb \
+	    api/*.proto
+
 build:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
 
@@ -31,7 +41,8 @@ install-lint-deps:
 install-goose:
 	(which goose > /dev/null) || go install github.com/pressly/goose/v3/cmd/goose@latest
 
-lint: install-lint-deps
+lint: 
+    install-lint-deps
 	golangci-lint --version
 	golangci-lint run ./...
 

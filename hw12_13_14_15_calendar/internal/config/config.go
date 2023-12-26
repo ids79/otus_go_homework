@@ -14,6 +14,7 @@ type Config struct {
 	Logger     LoggerConf `toml:"logger"`
 	Database   DBConf     `toml:"database"`
 	HTTPServer HTTP       `toml:"http-server"`
+	GRPCServer HTTP       `toml:"grpc-server"`
 }
 
 type LoggerConf struct {
@@ -27,6 +28,10 @@ type DBConf struct {
 }
 
 type HTTP struct {
+	Address string `toml:"address"`
+}
+
+type GRPC struct {
 	Address string `toml:"address"`
 }
 

@@ -27,7 +27,7 @@ func New(ctx context.Context, logg logger.Logg, config config.Config) Storage {
 		return memorystorage.New()
 	case "sql":
 		stor := sqlstorage.New(logg, config)
-		err := stor.Connect(ctx)
+		err := stor.Connect()
 		if err != nil {
 			return nil
 		}

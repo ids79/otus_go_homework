@@ -7,5 +7,8 @@ connect_str = "postgres://otus:otus@pg:5432/calendar"
 storage = "sql"
 
 [http-server]
-address = ":8081"
+address = "0.0.0.0:8081"
+
+[grpc-server]
+address = "0.0.0.0:5051"
 

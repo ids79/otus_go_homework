@@ -5,14 +5,7 @@ GIT_HASH := $(shell git log --format="%h" -n 1)
 LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
 
 generate:
-	rm -rf internal/pb
-	mkdir -p internal/pb
-	
-	protoc \
-	    --proto_path=api/ \
-	    --go_out=internal/pb \
-	    --go-grpc_out=internal/pb \
-	    api/*.proto
+	go generate
 
 build:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar

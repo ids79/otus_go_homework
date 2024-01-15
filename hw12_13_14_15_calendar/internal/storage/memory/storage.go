@@ -30,7 +30,7 @@ func (st *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error
 	ev.Year, ev.Month, ev.Day = ev.DateTime.Date()
 	for _, e := range st.messages {
 		if e.Year == ev.Year && e.Month == ev.Month && e.Day == ev.Day {
-			return uuid.Nil, types.ErrDeteIsOccupied
+			return uuid.Nil, types.ErrDateIsOccupied
 		}
 	}
 	_, ev.Week = ev.DateTime.ISOWeek()
@@ -114,4 +114,12 @@ func (st *Storage) ListOnMonth(ctx context.Context, time time.Time) []types.Even
 		}
 	}
 	return list
+}
+
+func (st *Storage) SelectForReminder(ctx context.Context, t time.Time) []types.Event {
+	return make([]types.Event, 0)
+}
+
+func (st *Storage) DeleteOldMessages(ctx context.Context, t time.Time) error {
+	return nil
 }

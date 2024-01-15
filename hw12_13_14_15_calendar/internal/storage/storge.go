@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/config"
@@ -19,9 +20,11 @@ type Storage interface {
 	ListOnDay(ctx context.Context, time time.Time) []types.Event
 	ListOnWeek(ctx context.Context, time time.Time) []types.Event
 	ListOnMonth(ctx context.Context, time time.Time) []types.Event
+	SelectForReminder(ctx context.Context, time time.Time) []types.Event
+	DeleteOldMessages(ctx context.Context, t time.Time) error
 }
 
-func New(ctx context.Context, logg logger.Logg, config config.Config) Storage {
+func New(ctx context.Context, logg logger.Logg, config config.Config, wg *sync.WaitGroup) Storage {
 	switch config.Database.Storage {
 	case "memory":
 		return memorystorage.New()
@@ -35,9 +38,11 @@ func New(ctx context.Context, logg logger.Logg, config config.Config) Storage {
 		if err != nil {
 			return nil
 		}
+		wg.Add(1)
 		go func() {
 			<-ctx.Done()
 			stor.Close()
+			wg.Done()
 		}()
 		return stor
 	}

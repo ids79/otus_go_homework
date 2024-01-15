@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"sync"
 	"time"
 
 	duration "github.com/golang/protobuf/ptypes/duration"
@@ -34,7 +35,7 @@ func NewServer(logger logger.Logg, app app.Application, config config.Config) *S
 	}
 }
 
-func (s *Server) Start(ctx context.Context) error {
+func (s *Server) Start(ctx context.Context, wg *sync.WaitGroup) error {
 	lsn, err := net.Listen("tcp", s.conf.GRPCServer.Address)
 	if err != nil {
 		s.logg.Error(err)
@@ -45,10 +46,17 @@ func (s *Server) Start(ctx context.Context) error {
 			UnaryServerMiddleWareInterceptor(s.loggingReq)),
 	)
 	pb.RegisterEventsApiServer(server, s)
-
 	s.logg.Info("starting grpc server on ", lsn.Addr().String())
+	go func() {
+		<-ctx.Done()
+		s.logg.Info("server grpc is stopping...")
+		server.Stop()
+		lsn.Close()
+		wg.Done()
+	}()
 	if err := server.Serve(lsn); err != nil {
 		s.logg.Error(err)
+		lsn.Close()
 	}
 	return nil
 }
@@ -68,9 +76,9 @@ func (s *Server) Create(ctx context.Context, req *pb.Event) (*pb.Responce, error
 	u := s.app.CreateEvent(ctx, appEv)
 	if u != uuid.Nil {
 		s.logg.Info("create new event with uuid: ", u.String())
-		return &pb.Responce{Resalt: u.String()}, nil
+		return &pb.Responce{Result: u.String()}, nil
 	}
-	return &pb.Responce{Resalt: "error with adding an event"}, nil
+	return &pb.Responce{Result: "error with adding an event"}, nil
 }
 
 func (s *Server) Update(ctx context.Context, req *pb.Event) (*pb.Responce, error) {
@@ -85,21 +93,21 @@ func (s *Server) Update(ctx context.Context, req *pb.Event) (*pb.Responce, error
 	err := s.app.UpgateEvent(ctx, uuid, appEv)
 	if err == nil {
 		s.logg.Info("update en event with uuid: ", req.ID)
-		return &pb.Responce{Resalt: req.ID}, nil
+		return &pb.Responce{Result: req.ID}, nil
 	}
-	return &pb.Responce{Resalt: "error with updating an event"}, nil
+	return &pb.Responce{Result: "error with updating an event"}, nil
 }
 
-func (s *Server) Delete(ctx context.Context, req *pb.Request) (*pb.Responce, error) {
+func (s *Server) Delete(ctx context.Context, req *pb.RequestUuid) (*pb.Responce, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3000*time.Millisecond)
 	defer cancel()
 	u := req.GetUuid()
 	err := s.app.DeleteEvent(ctx, uuid.FromStringOrNil(u))
 	if err == nil {
 		s.logg.Info("delete an event with uuid: ", req.GetUuid())
-		return &pb.Responce{Resalt: u}, nil
+		return &pb.Responce{Result: u}, nil
 	}
-	return &pb.Responce{Resalt: "error when delete an event"}, nil
+	return &pb.Responce{Result: "error when delete an event"}, nil
 }
 
 func eventsFormAppToView(eventsApp []app.Event) pb.Events {
@@ -125,7 +133,7 @@ func eventsFormAppToView(eventsApp []app.Event) pb.Events {
 	return pb.Events{Event: events}
 }
 
-func (s *Server) ListOnDay(ctx context.Context, req *pb.Request) (*pb.Events, error) {
+func (s *Server) ListOnDay(ctx context.Context, req *pb.RequestDate) (*pb.Events, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3000*time.Millisecond)
 	defer cancel()
 	d, err := time.Parse("2006-01-02", req.GetDate())
@@ -142,7 +150,7 @@ func (s *Server) ListOnDay(ctx context.Context, req *pb.Request) (*pb.Events, er
 	return &events, nil
 }
 
-func (s *Server) ListOnWeek(ctx context.Context, req *pb.Request) (*pb.Events, error) {
+func (s *Server) ListOnWeek(ctx context.Context, req *pb.RequestDate) (*pb.Events, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3000*time.Millisecond)
 	defer cancel()
 	d, err := time.Parse("2006-01-02", req.GetDate())
@@ -160,7 +168,7 @@ func (s *Server) ListOnWeek(ctx context.Context, req *pb.Request) (*pb.Events, e
 	return &events, nil
 }
 
-func (s *Server) ListOnMonth(ctx context.Context, req *pb.Request) (*pb.Events, error) {
+func (s *Server) ListOnMonth(ctx context.Context, req *pb.RequestDate) (*pb.Events, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3000*time.Millisecond)
 	defer cancel()
 	d, err := time.Parse("2006-01-02", req.GetDate())

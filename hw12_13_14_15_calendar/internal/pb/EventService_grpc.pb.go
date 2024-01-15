@@ -33,10 +33,10 @@ const (
 type EventsApiClient interface {
 	Create(ctx context.Context, in *Event, opts ...grpc.CallOption) (*Responce, error)
 	Update(ctx context.Context, in *Event, opts ...grpc.CallOption) (*Responce, error)
-	Delete(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Responce, error)
-	ListOnDay(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Events, error)
-	ListOnWeek(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Events, error)
-	ListOnMonth(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Events, error)
+	Delete(ctx context.Context, in *RequestUuid, opts ...grpc.CallOption) (*Responce, error)
+	ListOnDay(ctx context.Context, in *RequestDate, opts ...grpc.CallOption) (*Events, error)
+	ListOnWeek(ctx context.Context, in *RequestDate, opts ...grpc.CallOption) (*Events, error)
+	ListOnMonth(ctx context.Context, in *RequestDate, opts ...grpc.CallOption) (*Events, error)
 }
 
 type eventsApiClient struct {
@@ -65,7 +65,7 @@ func (c *eventsApiClient) Update(ctx context.Context, in *Event, opts ...grpc.Ca
 	return out, nil
 }
 
-func (c *eventsApiClient) Delete(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Responce, error) {
+func (c *eventsApiClient) Delete(ctx context.Context, in *RequestUuid, opts ...grpc.CallOption) (*Responce, error) {
 	out := new(Responce)
 	err := c.cc.Invoke(ctx, EventsApi_Delete_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -74,7 +74,7 @@ func (c *eventsApiClient) Delete(ctx context.Context, in *Request, opts ...grpc.
 	return out, nil
 }
 
-func (c *eventsApiClient) ListOnDay(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Events, error) {
+func (c *eventsApiClient) ListOnDay(ctx context.Context, in *RequestDate, opts ...grpc.CallOption) (*Events, error) {
 	out := new(Events)
 	err := c.cc.Invoke(ctx, EventsApi_ListOnDay_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -83,7 +83,7 @@ func (c *eventsApiClient) ListOnDay(ctx context.Context, in *Request, opts ...gr
 	return out, nil
 }
 
-func (c *eventsApiClient) ListOnWeek(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Events, error) {
+func (c *eventsApiClient) ListOnWeek(ctx context.Context, in *RequestDate, opts ...grpc.CallOption) (*Events, error) {
 	out := new(Events)
 	err := c.cc.Invoke(ctx, EventsApi_ListOnWeek_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -92,7 +92,7 @@ func (c *eventsApiClient) ListOnWeek(ctx context.Context, in *Request, opts ...g
 	return out, nil
 }
 
-func (c *eventsApiClient) ListOnMonth(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Events, error) {
+func (c *eventsApiClient) ListOnMonth(ctx context.Context, in *RequestDate, opts ...grpc.CallOption) (*Events, error) {
 	out := new(Events)
 	err := c.cc.Invoke(ctx, EventsApi_ListOnMonth_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -107,10 +107,10 @@ func (c *eventsApiClient) ListOnMonth(ctx context.Context, in *Request, opts ...
 type EventsApiServer interface {
 	Create(context.Context, *Event) (*Responce, error)
 	Update(context.Context, *Event) (*Responce, error)
-	Delete(context.Context, *Request) (*Responce, error)
-	ListOnDay(context.Context, *Request) (*Events, error)
-	ListOnWeek(context.Context, *Request) (*Events, error)
-	ListOnMonth(context.Context, *Request) (*Events, error)
+	Delete(context.Context, *RequestUuid) (*Responce, error)
+	ListOnDay(context.Context, *RequestDate) (*Events, error)
+	ListOnWeek(context.Context, *RequestDate) (*Events, error)
+	ListOnMonth(context.Context, *RequestDate) (*Events, error)
 	mustEmbedUnimplementedEventsApiServer()
 }
 
@@ -124,16 +124,16 @@ func (UnimplementedEventsApiServer) Create(context.Context, *Event) (*Responce, 
 func (UnimplementedEventsApiServer) Update(context.Context, *Event) (*Responce, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedEventsApiServer) Delete(context.Context, *Request) (*Responce, error) {
+func (UnimplementedEventsApiServer) Delete(context.Context, *RequestUuid) (*Responce, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (UnimplementedEventsApiServer) ListOnDay(context.Context, *Request) (*Events, error) {
+func (UnimplementedEventsApiServer) ListOnDay(context.Context, *RequestDate) (*Events, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListOnDay not implemented")
 }
-func (UnimplementedEventsApiServer) ListOnWeek(context.Context, *Request) (*Events, error) {
+func (UnimplementedEventsApiServer) ListOnWeek(context.Context, *RequestDate) (*Events, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListOnWeek not implemented")
 }
-func (UnimplementedEventsApiServer) ListOnMonth(context.Context, *Request) (*Events, error) {
+func (UnimplementedEventsApiServer) ListOnMonth(context.Context, *RequestDate) (*Events, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListOnMonth not implemented")
 }
 func (UnimplementedEventsApiServer) mustEmbedUnimplementedEventsApiServer() {}
@@ -186,7 +186,7 @@ func _EventsApi_Update_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _EventsApi_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(RequestUuid)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -198,13 +198,13 @@ func _EventsApi_Delete_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: EventsApi_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventsApiServer).Delete(ctx, req.(*Request))
+		return srv.(EventsApiServer).Delete(ctx, req.(*RequestUuid))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _EventsApi_ListOnDay_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(RequestDate)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -216,13 +216,13 @@ func _EventsApi_ListOnDay_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: EventsApi_ListOnDay_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventsApiServer).ListOnDay(ctx, req.(*Request))
+		return srv.(EventsApiServer).ListOnDay(ctx, req.(*RequestDate))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _EventsApi_ListOnWeek_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(RequestDate)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -234,13 +234,13 @@ func _EventsApi_ListOnWeek_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: EventsApi_ListOnWeek_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventsApiServer).ListOnWeek(ctx, req.(*Request))
+		return srv.(EventsApiServer).ListOnWeek(ctx, req.(*RequestDate))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _EventsApi_ListOnMonth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(RequestDate)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -252,7 +252,7 @@ func _EventsApi_ListOnMonth_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: EventsApi_ListOnMonth_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventsApiServer).ListOnMonth(ctx, req.(*Request))
+		return srv.(EventsApiServer).ListOnMonth(ctx, req.(*RequestDate))
 	}
 	return interceptor(ctx, in, info, handler)
 }

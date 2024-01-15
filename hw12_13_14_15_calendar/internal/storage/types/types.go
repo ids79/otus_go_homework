@@ -9,7 +9,7 @@ import (
 
 var ErrNotExistUUID = errors.New("the event with this uuid is not found")
 
-var ErrDeteIsOccupied = errors.New("the current date and time is occupied by another event")
+var ErrDateIsOccupied = errors.New("the current date and time is occupied by another event")
 
 type Event struct {
 	ID          uuid.UUID

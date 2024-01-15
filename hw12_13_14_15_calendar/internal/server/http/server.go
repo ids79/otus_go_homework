@@ -7,10 +7,12 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/app"
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/config"
+	internaljson "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/json"
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/logger"
 	uuid "github.com/satori/go.uuid"
 )
@@ -22,16 +24,6 @@ type Server struct {
 	srv  *http.Server
 }
 
-type Event struct {
-	ID          uuid.UUID `json:"id"`
-	Title       string    `json:"title"`
-	DateTime    JSONDate  `json:"datetime"`
-	Duration    Duration  `json:"dur"`
-	TimeBefore  Duration  `json:"timebefore"`
-	Description string    `json:"desc"`
-	UserID      string    `json:"user"`
-}
-
 func NewServer(logger logger.Logg, app app.Application, config config.Config) *Server {
 	return &Server{
 		logg: logger,
@@ -40,7 +32,7 @@ func NewServer(logger logger.Logg, app app.Application, config config.Config) *S
 	}
 }
 
-func (s *Server) Start(ctx context.Context) error {
+func (s *Server) Start(ctx context.Context, wg *sync.WaitGroup) error {
 	handler := s.loggingMiddleware()
 	server := &http.Server{
 		Addr:         s.conf.HTTPServer.Address,
@@ -50,13 +42,17 @@ func (s *Server) Start(ctx context.Context) error {
 	}
 	s.srv = server
 	s.logg.Info("starting http server on ", server.Addr)
+	go func() {
+		<-ctx.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		defer cancel()
+		s.logg.Info("server http is stopping...")
+		if err := s.srv.Shutdown(ctx); err != nil {
+			s.logg.Error("failed to stop http server: " + err.Error())
+		}
+		wg.Done()
+	}()
 	server.ListenAndServe()
-	return nil
-}
-
-func (s *Server) Stop(ctx context.Context) error {
-	s.logg.Info("calendar is stopping...")
-	s.srv.Close()
 	return nil
 }
 
@@ -86,7 +82,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) create(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		decoder := json.NewDecoder(r.Body)
-		var ev Event
+		var ev internaljson.Event
 		err := decoder.Decode(&ev)
 		defer r.Body.Close()
 		if err != nil {
@@ -120,7 +116,7 @@ func (s *Server) create(w http.ResponseWriter, r *http.Request) {
 func (s *Server) update(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		decoder := json.NewDecoder(r.Body)
-		var ev Event
+		var ev internaljson.Event
 		err := decoder.Decode(&ev)
 		defer r.Body.Close()
 		if err != nil {
@@ -170,21 +166,6 @@ func (s *Server) delete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func eventsFormAppToView(eventsBase []app.Event) []Event {
-	events := make([]Event, len(eventsBase))
-	for i, ev := range eventsBase {
-		events[i] = Event{
-			ID:          ev.ID,
-			Title:       ev.Title,
-			DateTime:    JSONDate(ev.DateTime),
-			Duration:    Duration(ev.Duration),
-			Description: ev.Description,
-			UserID:      strconv.Itoa(ev.UserID),
-		}
-	}
-	return events
-}
-
 func (s *Server) list(w http.ResponseWriter, r *http.Request, period string) {
 	if r.Method != http.MethodPost {
 		return
@@ -229,7 +210,7 @@ func (s *Server) list(w http.ResponseWriter, r *http.Request, period string) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(resp))
 	} else {
-		events := eventsFormAppToView(evApp)
+		events := internaljson.EventsFormAppToView(evApp)
 		body, err := json.Marshal(events)
 		if err != nil {
 			s.logg.Error(err.Error())

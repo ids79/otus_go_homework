@@ -9,10 +9,10 @@ import "google/protobuf/duration.proto";
 service EventsApi {
   rpc Create (Event) returns (Responce) {}
   rpc Update (Event) returns (Responce) {}
-  rpc Delete (Request) returns (Responce) {}
-  rpc ListOnDay (Request) returns (Events) {}
-  rpc ListOnWeek (Request) returns (Events) {}
-  rpc ListOnMonth (Request) returns (Events) {}
+  rpc Delete (RequestUuid) returns (Responce) {}
+  rpc ListOnDay (RequestDate) returns (Events) {}
+  rpc ListOnWeek (RequestDate) returns (Events) {}
+  rpc ListOnMonth (RequestDate) returns (Events) {}
 }
 
 message Event {
@@ -30,12 +30,13 @@ message Events {
 }
 
 message Responce {
-    string resalt = 1; 
+    string result = 1; 
 }
 
-message Request {
-    oneof req {
-        string uuid = 1;
-        string date = 2;
-    }    
+message RequestUuid {
+    string uuid = 1;
+}
+
+message RequestDate {
+    string date = 1;
 }

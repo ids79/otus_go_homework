@@ -41,7 +41,7 @@ func TestStorage(t *testing.T) {
 			TimeBefore:  time.Hour * 6,
 			UserID:      1,
 		})
-		require.ErrorIs(t, types.ErrDeteIsOccupied, err)
+		require.ErrorIs(t, types.ErrDateIsOccupied, err)
 
 		err = storage.Update(ctx, u, types.Event{
 			Duration:    time.Hour * 2,

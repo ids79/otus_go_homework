@@ -27,7 +27,9 @@ func New(logger logger.Logg, config config.Config) *Storage {
 }
 
 func (st *Storage) Connect() (err error) {
-	st.conn, err = sqlx.Connect("pgx", st.connStr)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	st.conn, err = sqlx.ConnectContext(ctx, "pgx", st.connStr)
 	if err != nil {
 		st.logg.Error("cannot connect to base psql: ", err)
 		return err
@@ -57,8 +59,6 @@ func (st *Storage) Migration() error {
 }
 
 func (st *Storage) MigrationDown() error {
-	println(st.connStr)
-	println("333")
 	if err := goose.Down(st.conn.DB, "migrations"); err != nil {
 		st.logg.Error("Data migration failed with an error: ", err)
 		return err
@@ -68,11 +68,12 @@ func (st *Storage) MigrationDown() error {
 }
 
 func (st *Storage) Close() error {
-	if err := goose.Down(st.conn.DB, "migrations"); err != nil {
-		st.logg.Error("Data migration failed with an error: ", err)
+	if err := st.conn.DB.Close(); err != nil {
+		st.logg.Error(err)
 		return err
 	}
-	return st.conn.DB.Close()
+	st.logg.Info("connect to storage is closed")
+	return nil
 }
 
 func (st *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error) {
@@ -82,7 +83,7 @@ func (st *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error
 		return uuid.Nil, err
 	}
 	if rows.Next() {
-		return uuid.Nil, types.ErrDeteIsOccupied
+		return uuid.Nil, types.ErrDateIsOccupied
 	}
 	u := uuid.NewV4()
 	y, m, d := ev.DateTime.Date()
@@ -190,4 +191,32 @@ func (st *Storage) ListOnMonth(ctx context.Context, time time.Time) []types.Even
 		return nil
 	}
 	return getRows(st.logg, rows)
+}
+
+func (st *Storage) SelectForReminder(ctx context.Context, t time.Time) []types.Event {
+	y, m, _ := t.Date()
+	sql := `select id, title, date_time, duration, description, user_id from events 
+	        where ((extract(epoch from date_time) * 1000000000) - time_before) <= :time 
+			      and (extract(epoch from date_time) * 1000000000) >= :time  
+			      and month = :month  and year = :year`
+	rows, err := st.conn.NamedQueryContext(ctx, sql, map[string]interface{}{
+		"time":  t.UnixNano(),
+		"month": int(m),
+		"year":  y,
+	})
+	if err != nil {
+		st.logg.Error(err)
+		return nil
+	}
+	return getRows(st.logg, rows)
+}
+
+func (st *Storage) DeleteOldMessages(ctx context.Context, t time.Time) error {
+	t = t.AddDate(-1, 0, 0)
+	query := `delete from events where (extract(epoch from date_time) * 1000000000) < $1`
+	_, err := st.conn.ExecContext(ctx, query, t.UnixNano())
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -5,8 +5,8 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
-	"time"
 
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/app"
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/config"
@@ -25,7 +25,9 @@ func init() {
 
 func main() {
 	flag.Parse()
-
+	if configFile == "" {
+		configFile, _ = os.LookupEnv("CONFIG_FILE")
+	}
 	if flag.Arg(0) == "version" {
 		printVersion()
 		return
@@ -33,37 +35,24 @@ func main() {
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	defer cancel()
 
+	wg := sync.WaitGroup{}
 	config := config.NewConfig(configFile)
 	logg := logger.New(config.Logger)
-	storage := storage.New(ctx, logg, config)
+	storage := storage.New(ctx, logg, config, &wg)
 	calendar := app.New(logg, storage, config)
 	serverhttp := internalhttp.NewServer(logg, calendar, config)
 	serverGrpc := internalgrpc.NewServer(logg, calendar, config)
-
-	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := serverhttp.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
-		}
-	}()
-
 	logg.Info("calendar is running...")
 
+	wg.Add(1)
 	go func() {
-		if err := serverhttp.Start(ctx); err != nil {
-			logg.Error("failed to start http server: " + err.Error())
-			cancel()
-			os.Exit(1)
-		}
+		serverhttp.Start(ctx, &wg)
 	}()
-	if err := serverGrpc.Start(ctx); err != nil {
-		logg.Error("failed to start grpc server: " + err.Error())
-		cancel()
-		os.Exit(1)
-	}
+	wg.Add(1)
+	go func() {
+		serverGrpc.Start(ctx, &wg)
+	}()
+	wg.Wait()
 }

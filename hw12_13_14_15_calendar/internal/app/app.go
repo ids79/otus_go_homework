@@ -25,6 +25,8 @@ type Application interface {
 	GetListOnDay(ctx context.Context, time time.Time) []Event
 	GetListOnWeek(ctx context.Context, time time.Time) []Event
 	GetListOnMonth(ctx context.Context, time time.Time) []Event
+	SelectForReminder(ctx context.Context, time time.Time) []Event
+	DeleteOldMessages(ctx context.Context, t time.Time) error
 }
 
 type Event struct {
@@ -56,6 +58,7 @@ func (a *App) CreateEvent(ctx context.Context, ev Event) uuid.UUID {
 	})
 	if err != nil {
 		a.logg.Error("error with adding an event: ", err)
+		return uuid.Nil
 	}
 	return u
 }
@@ -130,4 +133,23 @@ func (a *App) GetListOnMonth(ctx context.Context, time time.Time) []Event {
 		return make([]Event, 0)
 	}
 	return eventsFormBaseToApp(events)
+}
+
+func (a *App) SelectForReminder(ctx context.Context, time time.Time) []Event {
+	events := a.storage.SelectForReminder(ctx, time)
+	if events == nil {
+		return nil
+	}
+	if len(events) == 0 {
+		return make([]Event, 0)
+	}
+	return eventsFormBaseToApp(events)
+}
+
+func (a *App) DeleteOldMessages(ctx context.Context, t time.Time) error {
+	err := a.storage.DeleteOldMessages(ctx, t)
+	if err != nil {
+		a.logg.Error("error with delete old events: ", err)
+	}
+	return err
 }

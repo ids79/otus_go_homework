@@ -20,7 +20,7 @@ type StorageMock struct {
 func (am *StorageMock) Create(ctx context.Context, ev types.Event) (uuid.UUID, error) {
 	t, _ := time.Parse("2006-01-02 03:04 PM", "2023-11-15 10:30 AM")
 	if ev.DateTime == t {
-		return uuid.Nil, types.ErrDeteIsOccupied
+		return uuid.Nil, types.ErrDateIsOccupied
 	}
 	return uuid.NewV4(), nil
 }
@@ -62,6 +62,14 @@ func (am *StorageMock) ListOnWeek(ctx context.Context, time time.Time) []types.E
 
 func (am *StorageMock) ListOnMonth(ctx context.Context, time time.Time) []types.Event {
 	return make([]types.Event, 0)
+}
+
+func (am *StorageMock) SelectForReminder(ctx context.Context, time time.Time) []types.Event {
+	return make([]types.Event, 0)
+}
+
+func (am *StorageMock) DeleteOldMessages(ctx context.Context, t time.Time) error {
+	return nil
 }
 
 func TestStorage(t *testing.T) {

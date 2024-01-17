@@ -39,6 +39,8 @@ func (s *Server) Start(ctx context.Context, wg *sync.WaitGroup) error {
 	lsn, err := net.Listen("tcp", s.conf.GRPCServer.Address)
 	if err != nil {
 		s.logg.Error(err)
+		wg.Done()
+		return nil
 	}
 
 	server := grpc.NewServer(

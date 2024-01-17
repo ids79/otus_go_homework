@@ -45,7 +45,6 @@ func main() {
 	serverhttp := internalhttp.NewServer(logg, calendar, config)
 	serverGrpc := internalgrpc.NewServer(logg, calendar, config)
 	logg.Info("calendar is running...")
-
 	wg.Add(1)
 	go func() {
 		serverhttp.Start(ctx, &wg)

@@ -2,6 +2,7 @@ package internalgrpc
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"google.golang.org/grpc"
@@ -29,7 +30,8 @@ func UnaryServerMiddleWareInterceptor(mid Middleware) grpc.UnaryServerIntercepto
 
 func (s *Server) loggingReq(ctx context.Context) error {
 	if ctx == nil {
-		return nil
+		s.logg.Error("context is empty, logging will not perform")
+		return errors.New("context is empty, logging will not perform")
 	}
 	p, _ := peer.FromContext(ctx)
 	ip := p.Addr.String()

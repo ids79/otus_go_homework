@@ -12,7 +12,7 @@ type Logg interface {
 	Info(args ...interface{})
 }
 
-func New(config config.LoggerConf) *zap.SugaredLogger {
+func New(config config.LoggerConf, servis string) *zap.SugaredLogger {
 	lavel, err := zapcore.ParseLevel(config.Level)
 	if err != nil {
 		return nil
@@ -27,7 +27,6 @@ func New(config config.LoggerConf) *zap.SugaredLogger {
 		ErrorOutputPaths:  []string{"stderr"},
 		EncoderConfig:     zap.NewDevelopmentEncoderConfig(),
 	}
-	logger := zap.Must(logConfig.Build()).Sugar()
-
+	logger := zap.Must(logConfig.Build()).Sugar().Named(servis)
 	return logger
 }

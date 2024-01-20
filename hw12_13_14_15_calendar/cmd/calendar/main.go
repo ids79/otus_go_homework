@@ -39,7 +39,7 @@ func main() {
 
 	wg := sync.WaitGroup{}
 	config := config.NewConfig(configFile)
-	logg := logger.New(config.Logger)
+	logg := logger.New(config.Logger, "Calendar:")
 	storage := storage.New(ctx, logg, config, &wg)
 	calendar := app.New(logg, storage, config)
 	serverhttp := internalhttp.NewServer(logg, calendar, config)

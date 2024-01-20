@@ -14,7 +14,8 @@ type Config struct {
 	Logger     LoggerConf `toml:"logger"`
 	Database   DBConf     `toml:"database"`
 	HTTPServer HTTP       `toml:"http-server"`
-	GRPCServer HTTP       `toml:"grpc-server"`
+	GRPCServer GRPC       `toml:"grpc-server"`
+	RabbitMQ   MQ         `toml:"rabbitMQ"`
 }
 
 type LoggerConf struct {
@@ -33,6 +34,13 @@ type HTTP struct {
 
 type GRPC struct {
 	Address string `toml:"address"`
+}
+
+type MQ struct {
+	ConnectString string `toml:"connect_str"`
+	Queue         string `toml:"queue"`
+	QueueRem      string `toml:"queue_rem"`
+	PollingTime   int32  `toml:"polling_time"`
 }
 
 func NewConfig(configFile string) Config {

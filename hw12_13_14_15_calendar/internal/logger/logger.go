@@ -18,13 +18,14 @@ func New(config config.LoggerConf) *zap.SugaredLogger {
 		return nil
 	}
 	logConfig := zap.Config{
-		Level:            zap.NewAtomicLevelAt(lavel),
-		DisableCaller:    true,
-		Development:      true,
-		Encoding:         config.LogEncoding,
-		OutputPaths:      []string{"stdout"},
-		ErrorOutputPaths: []string{"stderr"},
-		EncoderConfig:    zap.NewDevelopmentEncoderConfig(),
+		Level:             zap.NewAtomicLevelAt(lavel),
+		DisableCaller:     true,
+		Development:       true,
+		DisableStacktrace: true,
+		Encoding:          config.LogEncoding,
+		OutputPaths:       []string{"stdout"},
+		ErrorOutputPaths:  []string{"stderr"},
+		EncoderConfig:     zap.NewDevelopmentEncoderConfig(),
 	}
 	logger := zap.Must(logConfig.Build()).Sugar()
 

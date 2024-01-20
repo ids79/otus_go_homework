@@ -1,7 +1,42 @@
 syntax = "proto3";
 
 package event;
+option go_package = "./;pb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+service EventsApi {
+  rpc Create (Event) returns (Responce) {}
+  rpc Update (Event) returns (Responce) {}
+  rpc Delete (RequestUuid) returns (Responce) {}
+  rpc ListOnDay (RequestDate) returns (Events) {}
+  rpc ListOnWeek (RequestDate) returns (Events) {}
+  rpc ListOnMonth (RequestDate) returns (Events) {}
+}
 
 message Event {
-    // TODO
+	string ID = 1;
+	string Title = 2;
+	google.protobuf.Timestamp DateTime = 3;
+	google.protobuf.Duration Duration = 4;
+	google.protobuf.Duration TimeBefore = 5;
+	string Description = 6;
+	string UserID = 7;
+}
+
+message Events {
+    repeated Event event = 1;
+}
+
+message Responce {
+    string result = 1; 
+}
+
+message RequestUuid {
+    string uuid = 1;
+}
+
+message RequestDate {
+    string date = 1;
 }

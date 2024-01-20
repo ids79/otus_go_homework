@@ -4,7 +4,7 @@ CREATE table events (
     id              text,
     title           text,
     description     text,
-	date_time       date,
+	date_time       timestamp,
 	year            numeric,
 	day             numeric,
 	week            numeric,

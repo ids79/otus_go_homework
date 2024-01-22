@@ -147,9 +147,5 @@ func (a *App) SelectForReminder(ctx context.Context, time time.Time) []Event {
 }
 
 func (a *App) DeleteOldMessages(ctx context.Context, t time.Time) error {
-	err := a.storage.DeleteOldMessages(ctx, t)
-	if err != nil {
-		a.logg.Error("error with delete old events: ", err)
-	}
-	return err
+	return a.storage.DeleteOldMessages(ctx, t)
 }

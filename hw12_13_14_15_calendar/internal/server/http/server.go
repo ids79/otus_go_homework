@@ -3,11 +3,11 @@ package internalhttp
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/app"
@@ -20,7 +20,7 @@ import (
 type Server struct {
 	logg logger.Logg
 	app  app.Application
-	conf config.Config
+	conf *config.Config
 	srv  *http.Server
 }
 
@@ -28,11 +28,11 @@ func NewServer(logger logger.Logg, app app.Application, config config.Config) *S
 	return &Server{
 		logg: logger,
 		app:  app,
-		conf: config,
+		conf: &config,
 	}
 }
 
-func (s *Server) Start(ctx context.Context, wg *sync.WaitGroup) error {
+func (s *Server) Start(ctx context.Context) error {
 	handler := s.loggingMiddleware()
 	server := &http.Server{
 		Addr:         s.conf.HTTPServer.Address,
@@ -42,18 +42,20 @@ func (s *Server) Start(ctx context.Context, wg *sync.WaitGroup) error {
 	}
 	s.srv = server
 	s.logg.Info("starting http server on ", server.Addr)
-	go func() {
-		<-ctx.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-		s.logg.Info("server http is stopping...")
-		if err := s.srv.Shutdown(ctx); err != nil {
-			s.logg.Error("failed to stop http server: " + err.Error())
-		}
-		wg.Done()
-	}()
 	server.ListenAndServe()
+	if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		s.logg.Error("HTTP server error: %v", err)
+	}
 	return nil
+}
+
+func (s *Server) Close() {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	s.logg.Info("server http is stopping...")
+	if err := s.srv.Shutdown(ctx); err != nil {
+		s.logg.Error("failed to stop http server: " + err.Error())
+	}
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

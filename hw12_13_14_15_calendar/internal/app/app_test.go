@@ -72,6 +72,10 @@ func (am *StorageMock) DeleteOldMessages(ctx context.Context, t time.Time) error
 	return nil
 }
 
+func (am *StorageMock) Close() error {
+	return nil
+}
+
 func TestStorage(t *testing.T) {
 	ctx := context.Background()
 	storageMock := &StorageMock{}

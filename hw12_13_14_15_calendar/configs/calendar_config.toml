@@ -12,9 +12,3 @@ address = "0.0.0.0:8081"
 [grpc-server]
 address = "0.0.0.0:5051"
 
-[rabbitMQ]
-connect_str = "amqp://ids79:29102087@mq:5672/"
-queue = "messages"
-queue_rem = "reminders"
-polling_time = 6
-

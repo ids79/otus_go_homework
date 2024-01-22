@@ -1,0 +1,12 @@
+[logger]
+level = "INFO"
+log_encoding = "console"
+
+[database]
+connect_str = "postgres://otus:otus@pg:5432/calendar"
+storage = "sql"
+
+[rabbitMQ]
+connect_str = "amqp://ids79:29102087@mq:5672/"
+queue = "messages"
+polling_time = 6

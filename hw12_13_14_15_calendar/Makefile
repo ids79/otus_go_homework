@@ -23,21 +23,21 @@ build:
 	go build -v -o $(BIN)/sender -ldflags "$(LDFLAGS)" ./cmd/sender
 
 run: build
-	$(BIN)/calendar -config ./configs/config.toml &
-	$(BIN)/scheduler -config ./configs/config.toml &
-	$(BIN)/sender -config ./configs/config.toml
+	$(BIN)/calendar -config ./configs/calendar_config.toml &
+	$(BIN)/scheduler -config ./configs/scheduler_config.toml &
+	$(BIN)/sender -config ./configs/sender_config.toml
 
 run-c:
 	go build -v -o $(BIN)/calendar -ldflags "$(LDFLAGS)" ./cmd/calendar
-	$(BIN)/calendar -config ./configs/config.toml
+	$(BIN)/calendar -config ./configs/calendar_config.toml
 
 run-sc:
 	go build -v -o $(BIN)/scheduler -ldflags "$(LDFLAGS)" ./cmd/scheduler
-	$(BIN)/scheduler -config ./configs/config.toml
+	$(BIN)/scheduler -config ./configs/scheduler_config.toml
 
 run-se:
 	go build -v -o $(BIN)/sender -ldflags "$(LDFLAGS)" ./cmd/sender
-	$(BIN)/sender -config ./configs/config.toml		
+	$(BIN)/sender -config ./configs/sender_config.toml		
 
 build-img:
 	docker build \

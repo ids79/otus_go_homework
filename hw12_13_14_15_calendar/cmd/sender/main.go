@@ -6,7 +6,6 @@ import (
 	"flag"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -37,23 +36,23 @@ func main() {
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
-	wg := sync.WaitGroup{}
 	config := config.NewConfig(configFile)
 	logg := logger.New(config.Logger, "Sender:")
 	logg.Info("sender is running...")
 
 	MQapi := mq.New(logg, &config)
-	err := MQapi.Connect(ctx, &wg)
+	err := MQapi.Connect(ctx)
 	if err != nil {
+		logg.Error("error with connect to rabbitMQ: ", err)
 		return
 	}
-	defer MQapi.Close()
 	logg.Info("connect to rabbitMQ is successful")
 
 	var ev []internaljson.EventRem
 	ticker := time.NewTicker(time.Duration(config.RabbitMQ.PollingTime) * time.Second)
 	msgs, err := MQapi.Consume(ctx, config.RabbitMQ.Queue, "")
 	if err != nil {
+		logg.Error("error with getting from rabbitMQ: ", err)
 		return
 	}
 	select {
@@ -61,15 +60,18 @@ func main() {
 		for m := range msgs {
 			err = json.Unmarshal(m, &ev)
 			if err != nil {
-				logg.Error(err.Error())
+				logg.Error("error while marshaling ", err)
 				continue
 			}
 			logg.Info(string(m))
-			MQapi.Publish("", config.RabbitMQ.QueueRem, m)
+			err = MQapi.Publish("", config.RabbitMQ.QueueRem, m)
+			if err != nil {
+				logg.Error("error with publishing to rabbitMQ: ", err)
+			}
 		}
 	case <-ctx.Done():
 		ticker.Stop()
-		wg.Wait()
+		MQapi.Close()
 		return
 	}
 }

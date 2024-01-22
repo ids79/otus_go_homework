@@ -2,7 +2,6 @@ package mq
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/config"
@@ -18,7 +17,7 @@ type Rabbit struct {
 }
 
 type RabbitAPI interface {
-	Connect(ctx context.Context, wg *sync.WaitGroup) error
+	Connect(ctx context.Context) error
 	Publish(exchange string, queue string, body []byte) error
 	Consume(ctx context.Context, queue string, consumer string) (<-chan []byte, error)
 	Close() error
@@ -31,7 +30,7 @@ func New(logger logger.Logg, config *config.Config) RabbitAPI {
 	}
 }
 
-func (r *Rabbit) Connect(ctx context.Context, wg *sync.WaitGroup) error {
+func (r *Rabbit) Connect(ctx context.Context) error {
 	var err error
 	r.conn, err = amqp.Dial(r.conf.RabbitMQ.ConnectString)
 	if err != nil {
@@ -44,33 +43,22 @@ func (r *Rabbit) Connect(ctx context.Context, wg *sync.WaitGroup) error {
 		r.conn.Close()
 		return err
 	}
-	wg.Add(1)
-	go func() {
-		<-ctx.Done()
-		if err = r.Close(); err != nil {
-			r.logg.Error(err)
-		} else {
-			r.logg.Info("connect to rabbitMQ is closed")
-		}
-		wg.Done()
-	}()
 	return nil
 }
 
-func (r *Rabbit) Publish(exchange string, queue string, body []byte) error {
-	var once sync.Once
-	f := func() {
-		r.chanel.QueueDeclare(
-			queue, // name
-			true,  // durable
-			false, // delete when unused
-			false, // exclusive
-			false, // no-wait
-			nil,   // arguments
-		)
-	}
-	once.Do(f)
+func queueDeclare(chanel *amqp.Channel, queue string) {
+	chanel.QueueDeclare(
+		queue, // name
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+}
 
+func (r *Rabbit) Publish(exchange string, queue string, body []byte) error {
+	queueDeclare(r.chanel, queue)
 	ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Millisecond)
 	defer cancel()
 	err := r.chanel.PublishWithContext(ctx,
@@ -90,19 +78,7 @@ func (r *Rabbit) Publish(exchange string, queue string, body []byte) error {
 }
 
 func (r *Rabbit) Consume(ctx context.Context, queue string, consumer string) (<-chan []byte, error) {
-	var once sync.Once
-	f := func() {
-		r.chanel.QueueDeclare(
-			queue, // name
-			true,  // durable
-			false, // delete when unused
-			false, // exclusive
-			false, // no-wait
-			nil,   // arguments
-		)
-	}
-	once.Do(f)
-
+	queueDeclare(r.chanel, queue)
 	msgs, err := r.chanel.Consume(
 		queue,    // queue
 		consumer, // consumer
@@ -118,9 +94,6 @@ func (r *Rabbit) Consume(ctx context.Context, queue string, consumer string) (<-
 	}
 	messages := make(chan []byte)
 	go func() {
-		defer func() {
-			close(messages)
-		}()
 		for {
 			select {
 			case <-ctx.Done():
@@ -130,7 +103,7 @@ func (r *Rabbit) Consume(ctx context.Context, queue string, consumer string) (<-
 					return
 				}
 				if err = del.Ack(false); err != nil {
-					r.logg.Error(err)
+					r.logg.Error("confirming the message error: ", err)
 				}
 				select {
 				case <-ctx.Done():
@@ -144,10 +117,14 @@ func (r *Rabbit) Consume(ctx context.Context, queue string, consumer string) (<-
 }
 
 func (r *Rabbit) Close() error {
-	err := r.chanel.Close()
-	if err != nil {
+	if err := r.chanel.Close(); err != nil {
+		r.logg.Error("channel connection error: ", err)
 		return err
 	}
-	err = r.conn.Close()
-	return err
+	if err := r.conn.Close(); err != nil {
+		r.logg.Error("rabbitMQ connection error: ", err)
+		return err
+	}
+	r.logg.Info("connect to rabbitMQ is closed")
+	return nil
 }

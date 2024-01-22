@@ -6,7 +6,6 @@ import (
 	"flag"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -39,16 +38,16 @@ func main() {
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
-	wg := sync.WaitGroup{}
 	config := config.NewConfig(configFile)
 	logg := logger.New(config.Logger, "Seduler:")
-	storage := storage.New(ctx, logg, config, &wg)
+	storage := storage.New(ctx, logg, config)
 	calendar := app.New(logg, storage, config)
 	logg.Info("scheduler is running...")
 
 	MQapi := mq.New(logg, &config)
-	err := MQapi.Connect(ctx, &wg)
+	err := MQapi.Connect(ctx)
 	if err != nil {
+		logg.Error("error with connect to rabbitMQ: ", err)
 		return
 	}
 	logg.Info("connect to rabbitMQ is successful")
@@ -72,13 +71,21 @@ func main() {
 				if err != nil {
 					logg.Error("error while marshaling ", err)
 				}
-				MQapi.Publish("", config.RabbitMQ.Queue, ev)
+				err = MQapi.Publish("", config.RabbitMQ.Queue, ev)
+				if err != nil {
+					logg.Error("error with publishing to rabbitMQ: ", err)
+					continue
+				}
 				logg.Info(string(ev))
 			}
-			_ = calendar.DeleteOldMessages(ctx, t)
+			err = calendar.DeleteOldMessages(ctx, t)
+			if err != nil {
+				logg.Error("error with delete old events: ", err)
+			}
 		case <-ctx.Done():
 			ticker.Stop()
-			wg.Wait()
+			storage.Close()
+			MQapi.Close()
 			return
 		}
 	}

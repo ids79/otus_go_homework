@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/app"
@@ -36,6 +37,7 @@ func main() {
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
+	wg := sync.WaitGroup{}
 	config := config.NewConfig(configFile)
 	logg := logger.New(config.Logger, "Calendar:")
 	storage := storage.New(ctx, logg, config)
@@ -43,10 +45,14 @@ func main() {
 	serverHTTP := internalhttp.NewServer(logg, calendar, config)
 	serverGRPC := internalgrpc.NewServer(logg, calendar, config)
 	logg.Info("calendar is running...")
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		serverHTTP.Start(ctx)
 	}()
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		serverGRPC.Start(ctx)
 	}()
 
@@ -54,4 +60,5 @@ func main() {
 	serverHTTP.Close()
 	serverGRPC.Close()
 	storage.Close()
+	wg.Wait()
 }

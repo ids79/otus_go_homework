@@ -98,7 +98,7 @@ func TestStorage(t *testing.T) {
 	}
 	evTarget[0] = ev
 
-	config := config.NewConfig("../../configs/config.toml")
+	config := config.NewConfig("../../configs/calendar_config.toml")
 	logg := logger.New(config.Logger, "Tests:")
 	calendar := New(logg, storageMock, config)
 

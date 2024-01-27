@@ -1,0 +1,9 @@
+[logger]
+level = "INFO"
+log_encoding = "console"
+
+[rabbitMQ]
+connect_str = "amqp://ids79:29102087@mq:5672/"
+queue = "messages"
+queue_rem = "reminders"
+polling_time = 6

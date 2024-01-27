@@ -40,6 +40,10 @@ func (st *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error
 	return u, nil
 }
 
+func (st *Storage) Close() error {
+	return nil
+}
+
 func (st *Storage) GetEvent(u uuid.UUID) (*types.Event, error) {
 	st.sm.Lock()
 	defer st.sm.Unlock()

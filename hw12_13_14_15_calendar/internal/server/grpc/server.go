@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"sync"
 	"time"
 
 	duration "github.com/golang/protobuf/ptypes/duration"
@@ -22,45 +21,45 @@ import (
 
 type Server struct {
 	pb.UnimplementedEventsApiServer
-	app  app.Application
-	logg logger.Logg
-	conf config.Config
+	ls     net.Listener
+	server *grpc.Server
+	app    app.Application
+	logg   logger.Logg
+	conf   *config.Config
 }
 
 func NewServer(logger logger.Logg, app app.Application, config config.Config) *Server {
 	return &Server{
 		logg: logger,
 		app:  app,
-		conf: config,
+		conf: &config,
 	}
 }
 
-func (s *Server) Start(ctx context.Context, wg *sync.WaitGroup) error {
-	lsn, err := net.Listen("tcp", s.conf.GRPCServer.Address)
+func (s *Server) Start(ctx context.Context) error {
+	var err error
+	s.ls, err = net.Listen("tcp", s.conf.GRPCServer.Address)
 	if err != nil {
 		s.logg.Error(err)
-		wg.Done()
 		return nil
 	}
-
-	server := grpc.NewServer(
+	s.server = grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			UnaryServerMiddleWareInterceptor(s.loggingReq)),
 	)
-	pb.RegisterEventsApiServer(server, s)
-	s.logg.Info("starting grpc server on ", lsn.Addr().String())
-	go func() {
-		<-ctx.Done()
-		s.logg.Info("server grpc is stopping...")
-		server.Stop()
-		lsn.Close()
-		wg.Done()
-	}()
-	if err := server.Serve(lsn); err != nil {
+	pb.RegisterEventsApiServer(s.server, s)
+	s.logg.Info("starting grpc server on ", s.ls.Addr().String())
+	if err := s.server.Serve(s.ls); err != nil {
 		s.logg.Error(err)
-		lsn.Close()
+		s.ls.Close()
 	}
 	return nil
+}
+
+func (s *Server) Close() {
+	s.logg.Info("server grpc is stopping...")
+	s.server.Stop()
+	s.ls.Close()
 }
 
 func (s *Server) Create(ctx context.Context, req *pb.Event) (*pb.Responce, error) {

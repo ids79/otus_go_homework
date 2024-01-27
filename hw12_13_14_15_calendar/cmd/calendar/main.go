@@ -39,19 +39,26 @@ func main() {
 
 	wg := sync.WaitGroup{}
 	config := config.NewConfig(configFile)
-	logg := logger.New(config.Logger)
-	storage := storage.New(ctx, logg, config, &wg)
+	logg := logger.New(config.Logger, "Calendar:")
+	storage := storage.New(ctx, logg, config)
 	calendar := app.New(logg, storage, config)
-	serverhttp := internalhttp.NewServer(logg, calendar, config)
-	serverGrpc := internalgrpc.NewServer(logg, calendar, config)
+	serverHTTP := internalhttp.NewServer(logg, calendar, config)
+	serverGRPC := internalgrpc.NewServer(logg, calendar, config)
 	logg.Info("calendar is running...")
 	wg.Add(1)
 	go func() {
-		serverhttp.Start(ctx, &wg)
+		defer wg.Done()
+		serverHTTP.Start(ctx)
 	}()
 	wg.Add(1)
 	go func() {
-		serverGrpc.Start(ctx, &wg)
+		defer wg.Done()
+		serverGRPC.Start(ctx)
 	}()
+
+	<-ctx.Done()
+	serverHTTP.Close()
+	serverGRPC.Close()
+	storage.Close()
 	wg.Wait()
 }

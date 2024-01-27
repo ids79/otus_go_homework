@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/config"
@@ -15,6 +14,7 @@ import (
 
 type Storage interface {
 	Create(ctx context.Context, ev types.Event) (uuid.UUID, error)
+	Close() error
 	Update(ctx context.Context, u uuid.UUID, ev types.Event) error
 	Delete(ctx context.Context, u uuid.UUID) error
 	ListOnDay(ctx context.Context, time time.Time) []types.Event
@@ -24,7 +24,7 @@ type Storage interface {
 	DeleteOldMessages(ctx context.Context, t time.Time) error
 }
 
-func New(ctx context.Context, logg logger.Logg, config config.Config, wg *sync.WaitGroup) Storage {
+func New(ctx context.Context, logg logger.Logg, config config.Config) Storage {
 	switch config.Database.Storage {
 	case "memory":
 		return memorystorage.New()
@@ -38,12 +38,6 @@ func New(ctx context.Context, logg logger.Logg, config config.Config, wg *sync.W
 		if err != nil {
 			return nil
 		}
-		wg.Add(1)
-		go func() {
-			<-ctx.Done()
-			stor.Close()
-			wg.Done()
-		}()
 		return stor
 	}
 	logg.Error("Wrong type of storage")

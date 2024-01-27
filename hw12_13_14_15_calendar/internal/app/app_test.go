@@ -72,6 +72,10 @@ func (am *StorageMock) DeleteOldMessages(ctx context.Context, t time.Time) error
 	return nil
 }
 
+func (am *StorageMock) Close() error {
+	return nil
+}
+
 func TestStorage(t *testing.T) {
 	ctx := context.Background()
 	storageMock := &StorageMock{}
@@ -94,8 +98,8 @@ func TestStorage(t *testing.T) {
 	}
 	evTarget[0] = ev
 
-	config := config.NewConfig("../../configs/config.toml")
-	logg := logger.New(config.Logger)
+	config := config.NewConfig("../../configs/calendar_config.toml")
+	logg := logger.New(config.Logger, "Tests:")
 	calendar := New(logg, storageMock, config)
 
 	t.Run("base test", func(t *testing.T) {

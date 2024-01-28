@@ -29,7 +29,7 @@ func TestIntegration(t *testing.T) {
 			UserID:      "55",
 		}
 		js, _ := json.Marshal(ev)
-		ctx, _ := context.WithTimeout(context.Background(), 3000*time.Millisecond)
+		ctx, cancel := context.WithCancel(context.Background())
 		rec, _ := http.NewRequestWithContext(ctx, "POST", "http://calendar:8081/create/", bytes.NewReader(js))
 		client := http.Client{}
 		resp, err := client.Do(rec)
@@ -46,15 +46,12 @@ func TestIntegration(t *testing.T) {
 		config := config.NewConfig("../configs/sender_config.toml")
 		logg := logger.New(config.Logger, "Tests:")
 		MQapi := mq.New(logg, &config)
-		ctxC, cancel := context.WithCancel(context.Background())
-		err = MQapi.Connect(ctxC)
+		err = MQapi.Connect(ctx)
 		require.Nil(t, err)
 		if err != nil {
 			os.Exit(1)
 		}
 		time.Sleep(8 * time.Second)
-
-		ctx, _ = context.WithTimeout(context.Background(), 3000*time.Millisecond)
 		recDel, _ := http.NewRequestWithContext(ctx, "POST", "http://calendar:8081/delete/", bytes.NewReader(body))
 		resp, err = client.Do(recDel)
 		require.Nil(t, err)
@@ -62,7 +59,7 @@ func TestIntegration(t *testing.T) {
 			os.Exit(1)
 		}
 		resp.Body.Close()
-		msgs, err := MQapi.Consume(ctxC, config.RabbitMQ.QueueRem, "")
+		msgs, err := MQapi.Consume(ctx, config.RabbitMQ.QueueRem, "")
 		require.Nil(t, err)
 		if err != nil {
 			os.Exit(1)

@@ -68,7 +68,7 @@ integation-test:
 	go test -race ./tests/...
 
 integat-docker-test:
-	docker compose -f docker-compose.yml -f docker-compose.test.yml up --exit-code-from tester
+	docker compose -f docker-compose.yml -f docker-compose.test.yml up --build --exit-code-from tester
 	docker-compose down
 	
 install-lint-deps:

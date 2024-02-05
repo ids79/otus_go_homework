@@ -89,6 +89,7 @@ func (s *Server) create(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		if err != nil {
 			s.logg.Info(err.Error())
+			http.Error(w, "invalid request parameters", http.StatusBadRequest)
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Millisecond)
@@ -123,6 +124,7 @@ func (s *Server) update(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		if err != nil {
 			s.logg.Info(err.Error())
+			http.Error(w, "invalid request parameters", http.StatusBadRequest)
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Millisecond)

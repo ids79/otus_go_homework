@@ -36,10 +36,8 @@ services:
   calendar:
     build:
       context: .
-      dockerfile: build/Dockerfile_calendar
+      dockerfile: build/calendar.dockerfile
     container_name: calendar
-    depends_on: 
-      - pg  
     depends_on:
       pg:     
         condition: service_healthy 
@@ -49,11 +47,8 @@ services:
   scheduler:
     build:
       context: .
-      dockerfile: build/Dockerfile_scheduler
+      dockerfile: build/scheduler.dockerfile
     container_name: scheduler
-    depends_on: 
-      - mq
-      - pg  
     depends_on:
       pg:     
         condition: service_healthy 
@@ -62,10 +57,8 @@ services:
   sender:
     build:
       context: .
-      dockerfile: build/Dockerfile_sender
+      dockerfile: build/sender.dockerfile
     container_name: sender
-    depends_on: 
-      - mq
     depends_on:
       mq:     
         condition: service_healthy 

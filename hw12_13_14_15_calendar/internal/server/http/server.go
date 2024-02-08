@@ -88,7 +88,11 @@ func (s *Server) create(w http.ResponseWriter, r *http.Request) {
 		err := decoder.Decode(&ev)
 		defer r.Body.Close()
 		if err != nil {
-			s.logg.Info(err.Error())
+			if errors.Is(err, io.EOF) {
+				s.logg.Info("Empty parameters were passed")
+			} else {
+				s.logg.Info(err.Error())
+			}
 			http.Error(w, "invalid request parameters", http.StatusBadRequest)
 			return
 		}

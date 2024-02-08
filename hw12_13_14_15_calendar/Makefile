@@ -65,11 +65,7 @@ test:
 	go test -race ./internal/... ./cmd/...
 
 integation-test:
-	go test -race ./tests/...
-
-integat-docker-test:
 	docker compose -f docker-compose.yml -f docker-compose.test.yml up --build --exit-code-from tester
-	docker-compose -f docker-compose.yml -f docker-compose.test.yml down
 	
 install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.50.1

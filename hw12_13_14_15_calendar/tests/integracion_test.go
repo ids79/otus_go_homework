@@ -115,14 +115,14 @@ func TestAddEvent(t *testing.T) {
 		js, err := json.Marshal(ev)
 		require.Nil(t, err)
 
-		rec, err := http.NewRequestWithContext(ctx, "POST", "http://localhost:8081/create/", bytes.NewReader([]byte{}))
+		rec, err := http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/create/", bytes.NewReader([]byte{}))
 		require.Nil(t, err)
 		resp, err := client.Do(rec)
 		require.Nil(t, err)
 		defer resp.Body.Close()
 		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-		rec, err = http.NewRequestWithContext(ctx, "POST", "http://localhost:8081/create/", bytes.NewReader(js))
+		rec, err = http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/create/", bytes.NewReader(js))
 		require.Nil(t, err)
 
 		resp, err = client.Do(rec)
@@ -131,7 +131,7 @@ func TestAddEvent(t *testing.T) {
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 		uuid, err := io.ReadAll(resp.Body)
 		defer func() {
-			recDel, _ := http.NewRequestWithContext(ctx, "POST", "http://localhost:8081/delete/", bytes.NewReader(uuid))
+			recDel, _ := http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/delete/", bytes.NewReader(uuid))
 			resp, err := client.Do(recDel)
 			require.Nil(t, err)
 			resp.Body.Close()
@@ -214,17 +214,17 @@ func TestGetEvents(t *testing.T) {
 		require.Nil(t, err)
 
 		defer func() {
-			recDel, _ := http.NewRequestWithContext(ctx, "POST", "http://localhost:8081/delete/",
+			recDel, _ := http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/delete/",
 				bytes.NewReader([]byte(u1.String())))
 			resp, err := client.Do(recDel)
 			require.Nil(t, err)
 			resp.Body.Close()
-			recDel, _ = http.NewRequestWithContext(ctx, "POST", "http://localhost:8081/delete/",
+			recDel, _ = http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/delete/",
 				bytes.NewReader([]byte(u2.String())))
 			resp, err = client.Do(recDel)
 			require.Nil(t, err)
 			resp.Body.Close()
-			recDel, _ = http.NewRequestWithContext(ctx, "POST", "http://localhost:8081/delete/",
+			recDel, _ = http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/delete/",
 				bytes.NewReader([]byte(u3.String())))
 			resp, err = client.Do(recDel)
 			require.Nil(t, err)
@@ -233,7 +233,7 @@ func TestGetEvents(t *testing.T) {
 
 		var events []internaljson.Event
 		dateStr := dateNow.Format("2006-01-02")
-		rec, err := http.NewRequestWithContext(ctx, "POST", "http://localhost:8081/list-on-day/",
+		rec, err := http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/list-on-day/",
 			bytes.NewReader([]byte(dateStr)))
 		require.Nil(t, err)
 		resp, err := client.Do(rec)
@@ -254,7 +254,7 @@ func TestGetEvents(t *testing.T) {
 			require.Equal(t, u1.String(), event.ID.String())
 		}
 
-		rec, err = http.NewRequestWithContext(ctx, "POST", "http://localhost:8081/list-on-week/",
+		rec, err = http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/list-on-week/",
 			bytes.NewReader([]byte(dateStr)))
 		require.Nil(t, err)
 		resp, err = client.Do(rec)
@@ -282,7 +282,7 @@ func TestGetEvents(t *testing.T) {
 			}
 		}
 
-		rec, err = http.NewRequestWithContext(ctx, "POST", "http://localhost:8081/list-on-month/",
+		rec, err = http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/list-on-month/",
 			bytes.NewReader([]byte(dateStr)))
 		require.Nil(t, err)
 		resp, err = client.Do(rec)

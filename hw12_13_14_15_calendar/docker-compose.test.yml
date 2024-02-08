@@ -5,9 +5,6 @@ services:
       context: .
       dockerfile: build/test.dockerfile
     container_name: tester
-    depends_on: 
-      - mq
-      - calendar
     depends_on:
       calendar:
         condition: service_started 

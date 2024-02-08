@@ -15,7 +15,8 @@ services:
       retries: 3
       start_period: 25s  
     ports:
-      - 15672:15672      
+      - 15672:15672  
+      - 5672:5672    
   pg:
     image: postgres:latest
     container_name: postgres 
@@ -35,34 +36,30 @@ services:
   calendar:
     build:
       context: .
-      dockerfile: build/Dockerfile_calendar
+      dockerfile: build/calendar.dockerfile
     container_name: calendar
-    depends_on: 
-      - pg  
     depends_on:
       pg:     
         condition: service_healthy 
     ports:
       - 8081:8081
-      - 5051:5051    
+      - 5051:5051   
   scheduler:
     build:
       context: .
-      dockerfile: build/Dockerfile_scheduler
+      dockerfile: build/scheduler.dockerfile
     container_name: scheduler
-    depends_on: 
-      - mq
-      - pg  
     depends_on:
       pg:     
         condition: service_healthy 
+      mq:     
+        condition: service_healthy   
   sender:
     build:
       context: .
-      dockerfile: build/Dockerfile_sender
+      dockerfile: build/sender.dockerfile
     container_name: sender
-    depends_on: 
-      - mq
     depends_on:
       mq:     
         condition: service_healthy 
+     

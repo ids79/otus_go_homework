@@ -115,14 +115,16 @@ func TestAddEvent(t *testing.T) {
 		js, err := json.Marshal(ev)
 		require.Nil(t, err)
 
-		rec, err := http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/create/", bytes.NewReader([]byte{}))
+		rec, err := http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/create/",
+			bytes.NewReader([]byte{}))
 		require.Nil(t, err)
 		resp, err := client.Do(rec)
 		require.Nil(t, err)
 		defer resp.Body.Close()
 		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-		rec, err = http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/create/", bytes.NewReader(js))
+		rec, err = http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/create/",
+			bytes.NewReader(js))
 		require.Nil(t, err)
 
 		resp, err = client.Do(rec)
@@ -131,7 +133,8 @@ func TestAddEvent(t *testing.T) {
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 		uuid, err := io.ReadAll(resp.Body)
 		defer func() {
-			recDel, _ := http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/delete/", bytes.NewReader(uuid))
+			recDel, _ := http.NewRequestWithContext(ctx, "POST", "http://host.docker.internal:8081/delete/",
+				bytes.NewReader(uuid))
 			resp, err := client.Do(recDel)
 			require.Nil(t, err)
 			resp.Body.Close()

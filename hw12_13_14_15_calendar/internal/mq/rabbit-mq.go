@@ -94,6 +94,7 @@ func (r *Rabbit) Consume(ctx context.Context, queue string, consumer string) (<-
 	}
 	messages := make(chan []byte)
 	go func() {
+		defer close(messages)
 		for {
 			select {
 			case <-ctx.Done():

@@ -52,9 +52,9 @@ run-img: build-img
 	-p 5051:5051 \
 	$(DOCKER_IMG):1.0.1
 		
-up: docker-compose -f ./deployments/docker-compose.yml up -d
+up: docker-compose -f ./deployments/docker-compose.yml up --build -d
 
-down: docker-compose down -f deployments/docker-compose.yml	
+down: docker-compose down	
 
 version: build
 	$(BIN)/calendar version
@@ -65,11 +65,7 @@ test:
 	go test -race ./internal/... ./cmd/...
 
 integation-test:
-	go test -race ./tests/...
-
-integat-docker-test:
-	docker compose -f docker-compose.yml -f docker-compose.test.yml up --exit-code-from tester
-	docker-compose down
+	docker compose -f docker-compose.yml -f docker-compose.test.yml up --build --exit-code-from tester
 	
 install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.50.1

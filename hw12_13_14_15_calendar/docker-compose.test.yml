@@ -1,0 +1,12 @@
+version: "2.1"
+services:
+  tester:
+    build:
+      context: .
+      dockerfile: build/test.dockerfile
+    container_name: tester
+    depends_on:
+      calendar:
+        condition: service_started 
+      mq:     
+        condition: service_healthy  

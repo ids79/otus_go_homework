@@ -82,36 +82,40 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) create(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		decoder := json.NewDecoder(r.Body)
-		var ev internaljson.Event
-		err := decoder.Decode(&ev)
-		defer r.Body.Close()
-		if err != nil {
-			s.logg.Info(err.Error())
-			return
-		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Millisecond)
-		defer cancel()
-		userID, _ := strconv.Atoi(ev.UserID)
-		appEv := app.Event{
-			Title:       ev.Title,
-			DateTime:    time.Time(ev.DateTime),
-			Duration:    time.Duration(ev.Duration),
-			TimeBefore:  time.Duration(ev.TimeBefore),
-			Description: ev.Description,
-			UserID:      userID,
-		}
-		u := s.app.CreateEvent(ctx, appEv)
-		if u != uuid.Nil {
-			s.logg.Info("create new event with uuid: ", u.String())
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(u.String()))
-		} else {
-			http.Error(w, "error when adding an event", http.StatusInternalServerError)
-		}
-	} else {
+	if r.Method != http.MethodPost {
 		http.NotFound(w, r)
+	}
+	decoder := json.NewDecoder(r.Body)
+	var ev internaljson.Event
+	err := decoder.Decode(&ev)
+	defer r.Body.Close()
+	if err != nil {
+		if errors.Is(err, io.EOF) {
+			s.logg.Info("Empty parameters were passed")
+		} else {
+			s.logg.Info(err.Error())
+		}
+		http.Error(w, "invalid request parameters", http.StatusBadRequest)
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Millisecond)
+	defer cancel()
+	userID, _ := strconv.Atoi(ev.UserID)
+	appEv := app.Event{
+		Title:       ev.Title,
+		DateTime:    time.Time(ev.DateTime),
+		Duration:    time.Duration(ev.Duration),
+		TimeBefore:  time.Duration(ev.TimeBefore),
+		Description: ev.Description,
+		UserID:      userID,
+	}
+	u := s.app.CreateEvent(ctx, appEv)
+	if u != uuid.Nil {
+		s.logg.Info("create new event with uuid: ", u.String())
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(u.String()))
+	} else {
+		http.Error(w, "error when adding an event", http.StatusInternalServerError)
 	}
 }
 
@@ -123,6 +127,7 @@ func (s *Server) update(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		if err != nil {
 			s.logg.Info(err.Error())
+			http.Error(w, "invalid request parameters", http.StatusBadRequest)
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Millisecond)

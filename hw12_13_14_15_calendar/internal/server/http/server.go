@@ -159,7 +159,7 @@ func (s *Server) delete(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			s.logg.Info("delete an event with uuid: ", st)
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(fmt.Sprintf("delete an event with uuid: %s", st)))
+			fmt.Fprintf(w, "delete an event with uuid: %s", st)
 		} else {
 			http.Error(w, "error when delete an event", http.StatusInternalServerError)
 		}

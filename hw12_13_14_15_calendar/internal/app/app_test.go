@@ -7,7 +7,7 @@ import (
 
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/config"
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/logger"
-	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types"
+	typesevents "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types-events"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -17,18 +17,18 @@ type StorageMock struct {
 	mock.Mock
 }
 
-func (am *StorageMock) Create(ctx context.Context, ev types.Event) (uuid.UUID, error) {
+func (am *StorageMock) Create(ctx context.Context, ev typesevents.Event) (uuid.UUID, error) {
 	t, _ := time.Parse("2006-01-02 03:04 PM", "2023-11-15 10:30 AM")
-	if ev.DateTime == t {
-		return uuid.Nil, types.ErrDateIsOccupied
+	if time.Time.Equal(ev.DateTime, t) {
+		return uuid.Nil, typesevents.ErrDateIsOccupied
 	}
 	return uuid.NewV4(), nil
 }
 
-func (am *StorageMock) Update(ctx context.Context, u uuid.UUID, ev types.Event) error {
+func (am *StorageMock) Update(ctx context.Context, u uuid.UUID, ev typesevents.Event) error {
 	uid, _ := uuid.FromString("02129661-9c49-48de-8d06-f88fe3867279")
 	if u == uid {
-		return types.ErrNotExistUUID
+		return typesevents.ErrNotExistUUID
 	}
 	return nil
 }
@@ -38,13 +38,13 @@ func (am *StorageMock) Delete(ctx context.Context, u uuid.UUID) error {
 	return args.Error(0)
 }
 
-func (am *StorageMock) ListOnDay(ctx context.Context, tm time.Time) []types.Event {
+func (am *StorageMock) ListOnDay(ctx context.Context, tm time.Time) []typesevents.Event {
 	y, m, d := tm.Date()
 	if y != 2023 || m != 11 || d != 15 {
-		return make([]types.Event, 0)
+		return make([]typesevents.Event, 0)
 	}
-	ev := make([]types.Event, 0)
-	ev = append(ev, types.Event{
+	ev := make([]typesevents.Event, 0)
+	ev = append(ev, typesevents.Event{
 		ID:          uuid.FromStringOrNil("02129661-9c49-48de-8d06-f88fe3867278"),
 		DateTime:    tm,
 		Title:       "Message",
@@ -56,16 +56,16 @@ func (am *StorageMock) ListOnDay(ctx context.Context, tm time.Time) []types.Even
 	return ev
 }
 
-func (am *StorageMock) ListOnWeek(ctx context.Context, time time.Time) []types.Event {
-	return make([]types.Event, 0)
+func (am *StorageMock) ListOnWeek(ctx context.Context, time time.Time) []typesevents.Event {
+	return make([]typesevents.Event, 0)
 }
 
-func (am *StorageMock) ListOnMonth(ctx context.Context, time time.Time) []types.Event {
-	return make([]types.Event, 0)
+func (am *StorageMock) ListOnMonth(ctx context.Context, time time.Time) []typesevents.Event {
+	return make([]typesevents.Event, 0)
 }
 
-func (am *StorageMock) SelectForReminder(ctx context.Context, time time.Time) []types.Event {
-	return make([]types.Event, 0)
+func (am *StorageMock) SelectForReminder(ctx context.Context, time time.Time) []typesevents.Event {
+	return make([]typesevents.Event, 0)
 }
 
 func (am *StorageMock) DeleteOldMessages(ctx context.Context, t time.Time) error {
@@ -81,7 +81,7 @@ func TestStorage(t *testing.T) {
 	storageMock := &StorageMock{}
 	storageMock.On("Delete", ctx, uuid.FromStringOrNil("02129661-9c49-48de-8d06-f88fe3867279")).
 		Once().
-		Return(types.ErrNotExistUUID)
+		Return(typesevents.ErrNotExistUUID)
 	storageMock.On("Delete", ctx, uuid.FromStringOrNil("02129661-9c49-48de-8d06-f88fe3867278")).Return(nil)
 
 	tm, _ := time.Parse("2006-01-02", "2023-11-10")
@@ -110,12 +110,12 @@ func TestStorage(t *testing.T) {
 		require.EqualValues(t, uuid.Nil, u)
 
 		err := calendar.UpgateEvent(ctx, uuid.FromStringOrNil("02129661-9c49-48de-8d06-f88fe3867279"), ev)
-		require.ErrorIs(t, err, types.ErrNotExistUUID)
+		require.ErrorIs(t, err, typesevents.ErrNotExistUUID)
 		err = calendar.UpgateEvent(ctx, uuid.FromStringOrNil("02129661-9c49-48de-8d06-f88fe3867278"), ev)
 		require.Nil(t, err)
 
 		err = calendar.DeleteEvent(ctx, uuid.FromStringOrNil("02129661-9c49-48de-8d06-f88fe3867279"))
-		require.ErrorIs(t, err, types.ErrNotExistUUID)
+		require.ErrorIs(t, err, typesevents.ErrNotExistUUID)
 		err = calendar.DeleteEvent(ctx, uuid.FromStringOrNil("02129661-9c49-48de-8d06-f88fe3867278"))
 		require.Nil(t, err)
 

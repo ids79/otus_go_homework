@@ -8,7 +8,7 @@ import (
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/config"
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/logger"
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage"
-	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types"
+	typesevents "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types-events"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -48,7 +48,7 @@ func New(logger logger.Logg, storage storage.Storage, config config.Config) Appl
 }
 
 func (a *App) CreateEvent(ctx context.Context, ev Event) uuid.UUID {
-	u, err := a.storage.Create(ctx, types.Event{
+	u, err := a.storage.Create(ctx, typesevents.Event{
 		DateTime:    ev.DateTime,
 		Title:       ev.Title,
 		Duration:    ev.Duration,
@@ -64,7 +64,7 @@ func (a *App) CreateEvent(ctx context.Context, ev Event) uuid.UUID {
 }
 
 func (a *App) UpgateEvent(ctx context.Context, u uuid.UUID, ev Event) error {
-	err := a.storage.Update(ctx, u, types.Event{
+	err := a.storage.Update(ctx, u, typesevents.Event{
 		Duration:    ev.Duration,
 		Description: ev.Description,
 		TimeBefore:  ev.TimeBefore,
@@ -83,7 +83,7 @@ func (a *App) DeleteEvent(ctx context.Context, u uuid.UUID) error {
 	return err
 }
 
-func eventsFormBaseToApp(eventsBase []types.Event) []Event {
+func eventsFormBaseToApp(eventsBase []typesevents.Event) []Event {
 	events := make([]Event, len(eventsBase))
 	for i, ev := range eventsBase {
 		events[i] = Event{

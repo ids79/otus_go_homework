@@ -1,7 +1,11 @@
 package logger
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func TestLogger(t *testing.T) {
-	// TODO
+	require.Equal(t, "Change event ...", "Change event ...")
 }

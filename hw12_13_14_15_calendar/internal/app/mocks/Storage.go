@@ -9,7 +9,7 @@ import (
 
 	time "time"
 
-	types "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types"
+	typesevents "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types-events"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -20,7 +20,7 @@ type Storage struct {
 }
 
 // Create provides a mock function with given fields: ctx, ev
-func (_m *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error) {
+func (_m *Storage) Create(ctx context.Context, ev typesevents.Event) (uuid.UUID, error) {
 	ret := _m.Called(ctx, ev)
 
 	if len(ret) == 0 {
@@ -29,10 +29,10 @@ func (_m *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error
 
 	var r0 uuid.UUID
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.Event) (uuid.UUID, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, typesevents.Event) (uuid.UUID, error)); ok {
 		return rf(ctx, ev)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.Event) uuid.UUID); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, typesevents.Event) uuid.UUID); ok {
 		r0 = rf(ctx, ev)
 	} else {
 		if ret.Get(0) != nil {
@@ -40,7 +40,7 @@ func (_m *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, types.Event) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, typesevents.Event) error); ok {
 		r1 = rf(ctx, ev)
 	} else {
 		r1 = ret.Error(1)
@@ -68,19 +68,19 @@ func (_m *Storage) Delete(ctx context.Context, u uuid.UUID) error {
 }
 
 // ListOnDay provides a mock function with given fields: ctx, _a1
-func (_m *Storage) ListOnDay(ctx context.Context, _a1 time.Time) []types.Event {
+func (_m *Storage) ListOnDay(ctx context.Context, _a1 time.Time) []typesevents.Event {
 	ret := _m.Called(ctx, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListOnDay")
 	}
 
-	var r0 []types.Event
-	if rf, ok := ret.Get(0).(func(context.Context, time.Time) []types.Event); ok {
+	var r0 []typesevents.Event
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time) []typesevents.Event); ok {
 		r0 = rf(ctx, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]types.Event)
+			r0 = ret.Get(0).([]typesevents.Event)
 		}
 	}
 
@@ -88,19 +88,19 @@ func (_m *Storage) ListOnDay(ctx context.Context, _a1 time.Time) []types.Event {
 }
 
 // ListOnMonth provides a mock function with given fields: ctx, _a1
-func (_m *Storage) ListOnMonth(ctx context.Context, _a1 time.Time) []types.Event {
+func (_m *Storage) ListOnMonth(ctx context.Context, _a1 time.Time) []typesevents.Event {
 	ret := _m.Called(ctx, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListOnMonth")
 	}
 
-	var r0 []types.Event
-	if rf, ok := ret.Get(0).(func(context.Context, time.Time) []types.Event); ok {
+	var r0 []typesevents.Event
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time) []typesevents.Event); ok {
 		r0 = rf(ctx, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]types.Event)
+			r0 = ret.Get(0).([]typesevents.Event)
 		}
 	}
 
@@ -108,19 +108,19 @@ func (_m *Storage) ListOnMonth(ctx context.Context, _a1 time.Time) []types.Event
 }
 
 // ListOnWeek provides a mock function with given fields: ctx, _a1
-func (_m *Storage) ListOnWeek(ctx context.Context, _a1 time.Time) []types.Event {
+func (_m *Storage) ListOnWeek(ctx context.Context, _a1 time.Time) []typesevents.Event {
 	ret := _m.Called(ctx, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListOnWeek")
 	}
 
-	var r0 []types.Event
-	if rf, ok := ret.Get(0).(func(context.Context, time.Time) []types.Event); ok {
+	var r0 []typesevents.Event
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time) []typesevents.Event); ok {
 		r0 = rf(ctx, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]types.Event)
+			r0 = ret.Get(0).([]typesevents.Event)
 		}
 	}
 
@@ -128,7 +128,7 @@ func (_m *Storage) ListOnWeek(ctx context.Context, _a1 time.Time) []types.Event 
 }
 
 // Update provides a mock function with given fields: ctx, u, ev
-func (_m *Storage) Update(ctx context.Context, u uuid.UUID, ev types.Event) error {
+func (_m *Storage) Update(ctx context.Context, u uuid.UUID, ev typesevents.Event) error {
 	ret := _m.Called(ctx, u, ev)
 
 	if len(ret) == 0 {
@@ -136,7 +136,7 @@ func (_m *Storage) Update(ctx context.Context, u uuid.UUID, ev types.Event) erro
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, types.Event) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, typesevents.Event) error); ok {
 		r0 = rf(ctx, u, ev)
 	} else {
 		r0 = ret.Error(0)

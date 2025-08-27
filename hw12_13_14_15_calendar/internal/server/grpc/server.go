@@ -38,7 +38,8 @@ func NewServer(logger logger.Logg, app app.Application, config config.Config) *S
 
 func (s *Server) Start(ctx context.Context) error {
 	var err error
-	s.ls, err = net.Listen("tcp", s.conf.GRPCServer.Address)
+	var lConf *net.ListenConfig
+	s.ls, err = lConf.Listen(ctx, "tcp", s.conf.GRPCServer.Address)
 	if err != nil {
 		s.logg.Error(err)
 		return nil
@@ -62,7 +63,7 @@ func (s *Server) Close() {
 	s.ls.Close()
 }
 
-func (s *Server) Create(ctx context.Context, req *pb.Event) (*pb.Responce, error) {
+func (s *Server) Create(ctx context.Context, req *pb.Event) (*pb.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3000*time.Millisecond)
 	defer cancel()
 	userID, _ := strconv.Atoi(req.UserID)
@@ -77,12 +78,12 @@ func (s *Server) Create(ctx context.Context, req *pb.Event) (*pb.Responce, error
 	u := s.app.CreateEvent(ctx, appEv)
 	if u != uuid.Nil {
 		s.logg.Info("create new event with uuid: ", u.String())
-		return &pb.Responce{Result: u.String()}, nil
+		return &pb.Response{Result: u.String()}, nil
 	}
-	return &pb.Responce{Result: "error with adding an event"}, nil
+	return &pb.Response{Result: "error with adding an event"}, nil
 }
 
-func (s *Server) Update(ctx context.Context, req *pb.Event) (*pb.Responce, error) {
+func (s *Server) Update(ctx context.Context, req *pb.Event) (*pb.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3000*time.Millisecond)
 	defer cancel()
 	appEv := app.Event{
@@ -94,21 +95,21 @@ func (s *Server) Update(ctx context.Context, req *pb.Event) (*pb.Responce, error
 	err := s.app.UpgateEvent(ctx, uuid, appEv)
 	if err == nil {
 		s.logg.Info("update en event with uuid: ", req.ID)
-		return &pb.Responce{Result: req.ID}, nil
+		return &pb.Response{Result: req.ID}, nil
 	}
-	return &pb.Responce{Result: "error with updating an event"}, nil
+	return &pb.Response{Result: "error with updating an event"}, nil
 }
 
-func (s *Server) Delete(ctx context.Context, req *pb.RequestUuid) (*pb.Responce, error) {
+func (s *Server) Delete(ctx context.Context, req *pb.RequestUuid) (*pb.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3000*time.Millisecond)
 	defer cancel()
 	u := req.GetUuid()
 	err := s.app.DeleteEvent(ctx, uuid.FromStringOrNil(u))
 	if err == nil {
 		s.logg.Info("delete an event with uuid: ", req.GetUuid())
-		return &pb.Responce{Result: u}, nil
+		return &pb.Response{Result: u}, nil
 	}
-	return &pb.Responce{Result: "error when delete an event"}, nil
+	return &pb.Response{Result: "error when delete an event"}, nil
 }
 
 func eventsFormAppToView(eventsApp []app.Event) pb.Events {

@@ -8,19 +8,19 @@ import (
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/logger"
 	memorystorage "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/memory"
 	sqlstorage "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/sql"
-	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types"
+	typesevents "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types-events"
 	uuid "github.com/satori/go.uuid"
 )
 
 type Storage interface {
-	Create(ctx context.Context, ev types.Event) (uuid.UUID, error)
+	Create(ctx context.Context, ev typesevents.Event) (uuid.UUID, error)
 	Close() error
-	Update(ctx context.Context, u uuid.UUID, ev types.Event) error
+	Update(ctx context.Context, u uuid.UUID, ev typesevents.Event) error
 	Delete(ctx context.Context, u uuid.UUID) error
-	ListOnDay(ctx context.Context, time time.Time) []types.Event
-	ListOnWeek(ctx context.Context, time time.Time) []types.Event
-	ListOnMonth(ctx context.Context, time time.Time) []types.Event
-	SelectForReminder(ctx context.Context, time time.Time) []types.Event
+	ListOnDay(ctx context.Context, time time.Time) []typesevents.Event
+	ListOnWeek(ctx context.Context, time time.Time) []typesevents.Event
+	ListOnMonth(ctx context.Context, time time.Time) []typesevents.Event
+	SelectForReminder(ctx context.Context, time time.Time) []typesevents.Event
 	DeleteOldMessages(ctx context.Context, t time.Time) error
 }
 

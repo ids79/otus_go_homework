@@ -68,7 +68,7 @@ integation-test:
 	docker compose -f docker-compose.yml -f docker-compose.test.yml up --build --exit-code-from tester
 	
 install-lint-deps:
-	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.50.1
+	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v2.4.0
 
 install-goose:
 	(which goose > /dev/null) || go install github.com/pressly/goose/v3/cmd/goose@latest

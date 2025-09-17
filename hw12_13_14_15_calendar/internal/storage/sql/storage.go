@@ -7,7 +7,7 @@ import (
 
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/config"
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/logger"
-	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types"
+	typesevents "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types-events"
 	"github.com/jmoiron/sqlx"
 	goose "github.com/pressly/goose/v3"
 	uuid "github.com/satori/go.uuid"
@@ -68,7 +68,7 @@ func (st *Storage) MigrationDown() error {
 }
 
 func (st *Storage) Close() error {
-	if err := st.conn.DB.Close(); err != nil {
+	if err := st.conn.Close(); err != nil {
 		st.logg.Error(err)
 		return err
 	}
@@ -76,14 +76,14 @@ func (st *Storage) Close() error {
 	return nil
 }
 
-func (st *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error) {
+func (st *Storage) Create(ctx context.Context, ev typesevents.Event) (uuid.UUID, error) {
 	query := `select * from events where date_time = $1`
 	rows, err := st.conn.QueryContext(ctx, query, ev.DateTime)
 	if err != nil {
 		return uuid.Nil, err
 	}
 	if rows.Next() {
-		return uuid.Nil, types.ErrDateIsOccupied
+		return uuid.Nil, typesevents.ErrDateIsOccupied
 	}
 	u := uuid.NewV4()
 	y, m, d := ev.DateTime.Date()
@@ -99,7 +99,7 @@ func (st *Storage) Create(ctx context.Context, ev types.Event) (uuid.UUID, error
 	return u, nil
 }
 
-func (st *Storage) Update(ctx context.Context, u uuid.UUID, ev types.Event) error {
+func (st *Storage) Update(ctx context.Context, u uuid.UUID, ev typesevents.Event) error {
 	query := `select * from events where id = $1`
 	rows, err := st.conn.QueryContext(ctx, query, u)
 	if err != nil {
@@ -113,7 +113,7 @@ func (st *Storage) Update(ctx context.Context, u uuid.UUID, ev types.Event) erro
 			return err
 		}
 	} else {
-		return types.ErrNotExistUUID
+		return typesevents.ErrNotExistUUID
 	}
 	return nil
 }
@@ -131,15 +131,15 @@ func (st *Storage) Delete(ctx context.Context, u uuid.UUID) error {
 			return err
 		}
 	} else {
-		return types.ErrNotExistUUID
+		return typesevents.ErrNotExistUUID
 	}
 	return nil
 }
 
-func getRows(logg logger.Logg, rows *sqlx.Rows) []types.Event {
-	list := make([]types.Event, 0)
+func getRows(logg logger.Logg, rows *sqlx.Rows) []typesevents.Event {
+	list := make([]typesevents.Event, 0)
 	for rows.Next() {
-		var event types.Event
+		var event typesevents.Event
 		err := rows.StructScan(&event)
 		if err != nil {
 			logg.Error("error in the request request processing", err)
@@ -150,7 +150,7 @@ func getRows(logg logger.Logg, rows *sqlx.Rows) []types.Event {
 	return list
 }
 
-func (st *Storage) ListOnDay(ctx context.Context, time time.Time) []types.Event {
+func (st *Storage) ListOnDay(ctx context.Context, time time.Time) []typesevents.Event {
 	y, m, d := time.Date()
 	sql := "select * from events where day = :day and month = :month  and year = :year"
 	rows, err := st.conn.NamedQueryContext(ctx, sql, map[string]interface{}{
@@ -165,7 +165,7 @@ func (st *Storage) ListOnDay(ctx context.Context, time time.Time) []types.Event 
 	return getRows(st.logg, rows)
 }
 
-func (st *Storage) ListOnWeek(ctx context.Context, time time.Time) []types.Event {
+func (st *Storage) ListOnWeek(ctx context.Context, time time.Time) []typesevents.Event {
 	y, w := time.ISOWeek()
 	sql := "select * from events where week = :week and year = :year"
 	rows, err := st.conn.NamedQueryContext(ctx, sql, map[string]interface{}{
@@ -179,7 +179,7 @@ func (st *Storage) ListOnWeek(ctx context.Context, time time.Time) []types.Event
 	return getRows(st.logg, rows)
 }
 
-func (st *Storage) ListOnMonth(ctx context.Context, time time.Time) []types.Event {
+func (st *Storage) ListOnMonth(ctx context.Context, time time.Time) []typesevents.Event {
 	y, m, _ := time.Date()
 	sql := "select * from events where month = :month and year = :year"
 	rows, err := st.conn.NamedQueryContext(ctx, sql, map[string]interface{}{
@@ -193,7 +193,7 @@ func (st *Storage) ListOnMonth(ctx context.Context, time time.Time) []types.Even
 	return getRows(st.logg, rows)
 }
 
-func (st *Storage) SelectForReminder(ctx context.Context, t time.Time) []types.Event {
+func (st *Storage) SelectForReminder(ctx context.Context, t time.Time) []typesevents.Event {
 	y, m, _ := t.Date()
 	sql := `select id, title, date_time, duration, description, user_id from events 
 	        where ((extract(epoch from date_time) * 1000000000) - time_before) <= :time 

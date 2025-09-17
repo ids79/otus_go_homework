@@ -7,9 +7,9 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
 service EventsApi {
-  rpc Create (Event) returns (Responce) {}
-  rpc Update (Event) returns (Responce) {}
-  rpc Delete (RequestUuid) returns (Responce) {}
+  rpc Create (Event) returns (Response) {}
+  rpc Update (Event) returns (Response) {}
+  rpc Delete (RequestUuid) returns (Response) {}
   rpc ListOnDay (RequestDate) returns (Events) {}
   rpc ListOnWeek (RequestDate) returns (Events) {}
   rpc ListOnMonth (RequestDate) returns (Events) {}
@@ -29,7 +29,7 @@ message Events {
     repeated Event event = 1;
 }
 
-message Responce {
+message Response {
     string result = 1; 
 }
 

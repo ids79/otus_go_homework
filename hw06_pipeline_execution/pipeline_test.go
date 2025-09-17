@@ -25,7 +25,7 @@ var g = func(_ string, f func(v interface{}) interface{}) Stage {
 				for i := 0; i < 10; i++ {
 					<-tick.C
 				}
-				out <- f(v.(int))
+				out <- f(v)
 			}
 		}()
 		return out
@@ -66,8 +66,8 @@ func TestPipeline(t *testing.T) {
 	})
 
 	t.Run("done case", func(t *testing.T) {
-		in := make(Bi)
-		done := make(Bi)
+	    in := make(Bi)
+	    done := make(Bi)
 		data := []int{1, 2, 3, 4, 5}
 
 		// Abort after 200ms

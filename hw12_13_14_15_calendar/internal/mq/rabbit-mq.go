@@ -32,6 +32,7 @@ func New(logger logger.Logg, config *config.Config) RabbitAPI {
 
 func (r *Rabbit) Connect(ctx context.Context) error {
 	var err error
+	_ = ctx
 	r.conn, err = amqp.Dial(r.conf.RabbitMQ.ConnectString)
 	if err != nil {
 		r.logg.Error("failed to work with RabbitMQ ", err)

@@ -123,11 +123,11 @@ func compareFilesByLine(fromPath, toPeath string) bool {
 	for {
 		scrEOF := scan1.Scan()
 		dstEOF := scan2.Scan()
-		if !scrEOF && !dstEOF {
-			break
-		}
 		if scan1.Text() != scan2.Text() {
 			return false
+		}
+		if !scrEOF && !dstEOF {
+			break
 		}
 	}
 	return true

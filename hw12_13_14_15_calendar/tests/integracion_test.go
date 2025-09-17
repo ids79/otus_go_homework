@@ -13,7 +13,7 @@ import (
 	internaljson "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/json"
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/logger"
 	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/mq"
-	"github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types"
+	typesevents "github.com/ids79/otus_go_homework/hw12_13_14_15_calendar/internal/storage/types-events"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	uuid "github.com/satori/go.uuid"
@@ -160,7 +160,7 @@ func TestAddEvent(t *testing.T) {
 		require.Nil(t, err)
 		var next bool
 		if next = rows.Next(); next {
-			var event types.Event
+			var event typesevents.Event
 			err := rows.StructScan(&event)
 			require.Nil(t, err)
 			require.Equal(t, ev.Title, event.Title)

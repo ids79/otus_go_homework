@@ -33,6 +33,7 @@ func NewServer(logger logger.Logg, app app.Application, config config.Config) *S
 }
 
 func (s *Server) Start(ctx context.Context) error {
+	_ = ctx
 	handler := s.loggingMiddleware()
 	server := &http.Server{
 		Addr:         s.conf.HTTPServer.Address,

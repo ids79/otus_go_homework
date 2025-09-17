@@ -25,6 +25,7 @@ type Storage interface {
 }
 
 func New(ctx context.Context, logg logger.Logg, config config.Config) Storage {
+	_ = ctx
 	switch config.Database.Storage {
 	case "memory":
 		return memorystorage.New()

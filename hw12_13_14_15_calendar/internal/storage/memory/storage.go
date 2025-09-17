@@ -25,6 +25,7 @@ func New() *Storage {
 }
 
 func (st *Storage) Create(ctx context.Context, ev typesevents.Event) (uuid.UUID, error) {
+	_ = ctx
 	st.sm.Lock()
 	defer st.sm.Unlock()
 	ev.Year, ev.Month, ev.Day = ev.DateTime.Date()
@@ -54,6 +55,7 @@ func (st *Storage) GetEvent(u uuid.UUID) (*typesevents.Event, error) {
 }
 
 func (st *Storage) Update(ctx context.Context, u uuid.UUID, ev typesevents.Event) error {
+	_ = ctx
 	st.sm.Lock()
 	defer st.sm.Unlock()
 	if _, ok := st.mesID[u]; !ok {
@@ -66,6 +68,7 @@ func (st *Storage) Update(ctx context.Context, u uuid.UUID, ev typesevents.Event
 }
 
 func (st *Storage) Delete(ctx context.Context, u uuid.UUID) error {
+	_ = ctx
 	st.sm.Lock()
 	defer st.sm.Unlock()
 	if _, ok := st.mesID[u]; !ok {
@@ -82,6 +85,7 @@ func (st *Storage) Delete(ctx context.Context, u uuid.UUID) error {
 }
 
 func (st *Storage) ListOnDay(ctx context.Context, time time.Time) []typesevents.Event {
+	_ = ctx
 	st.sm.Lock()
 	defer st.sm.Unlock()
 	list := make([]typesevents.Event, 0)
@@ -95,6 +99,7 @@ func (st *Storage) ListOnDay(ctx context.Context, time time.Time) []typesevents.
 }
 
 func (st *Storage) ListOnWeek(ctx context.Context, time time.Time) []typesevents.Event {
+	_ = ctx
 	st.sm.Lock()
 	defer st.sm.Unlock()
 	list := make([]typesevents.Event, 0)
@@ -108,6 +113,7 @@ func (st *Storage) ListOnWeek(ctx context.Context, time time.Time) []typesevents
 }
 
 func (st *Storage) ListOnMonth(ctx context.Context, time time.Time) []typesevents.Event {
+	_ = ctx
 	st.sm.Lock()
 	defer st.sm.Unlock()
 	list := make([]typesevents.Event, 0)
@@ -121,9 +127,13 @@ func (st *Storage) ListOnMonth(ctx context.Context, time time.Time) []typesevent
 }
 
 func (st *Storage) SelectForReminder(ctx context.Context, t time.Time) []typesevents.Event {
+	_ = ctx
+	_ = t
 	return make([]typesevents.Event, 0)
 }
 
 func (st *Storage) DeleteOldMessages(ctx context.Context, t time.Time) error {
+	_ = ctx
+	_ = t
 	return nil
 }

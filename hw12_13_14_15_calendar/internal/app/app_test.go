@@ -18,6 +18,7 @@ type StorageMock struct {
 }
 
 func (am *StorageMock) Create(ctx context.Context, ev typesevents.Event) (uuid.UUID, error) {
+	_ = ctx
 	t, _ := time.Parse("2006-01-02 03:04 PM", "2023-11-15 10:30 AM")
 	if time.Time.Equal(ev.DateTime, t) {
 		return uuid.Nil, typesevents.ErrDateIsOccupied
@@ -26,6 +27,8 @@ func (am *StorageMock) Create(ctx context.Context, ev typesevents.Event) (uuid.U
 }
 
 func (am *StorageMock) Update(ctx context.Context, u uuid.UUID, ev typesevents.Event) error {
+	_ = ctx
+	_ = ev
 	uid, _ := uuid.FromString("02129661-9c49-48de-8d06-f88fe3867279")
 	if u == uid {
 		return typesevents.ErrNotExistUUID
@@ -39,6 +42,7 @@ func (am *StorageMock) Delete(ctx context.Context, u uuid.UUID) error {
 }
 
 func (am *StorageMock) ListOnDay(ctx context.Context, tm time.Time) []typesevents.Event {
+	_ = ctx
 	y, m, d := tm.Date()
 	if y != 2023 || m != 11 || d != 15 {
 		return make([]typesevents.Event, 0)
@@ -57,18 +61,26 @@ func (am *StorageMock) ListOnDay(ctx context.Context, tm time.Time) []typesevent
 }
 
 func (am *StorageMock) ListOnWeek(ctx context.Context, time time.Time) []typesevents.Event {
+	_ = ctx
+	_ = time
 	return make([]typesevents.Event, 0)
 }
 
 func (am *StorageMock) ListOnMonth(ctx context.Context, time time.Time) []typesevents.Event {
+	_ = ctx
+	_ = time
 	return make([]typesevents.Event, 0)
 }
 
 func (am *StorageMock) SelectForReminder(ctx context.Context, time time.Time) []typesevents.Event {
+	_ = ctx
+	_ = time
 	return make([]typesevents.Event, 0)
 }
 
 func (am *StorageMock) DeleteOldMessages(ctx context.Context, t time.Time) error {
+	_ = ctx
+	_ = t
 	return nil
 }
 
